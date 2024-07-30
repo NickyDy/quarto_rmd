@@ -1,0 +1,333 @@
+---
+title: "Using some widely-used ML models to predict bike rentals!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-08-22"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, message = F, warning = F, echo = F)
+```
+
+# 1.Loading libraries
+```{r echo=TRUE}
+library(tidyverse)
+library(tidymodels)
+library(rpart.plot)
+library(DT)
+```
+
+# 2.Loading the data
+```{r echo=TRUE}
+bikes <- read_csv("~/Desktop/R/csv/bikes.csv")
+df <- bikes %>% slice_head(n = 700)
+new_data <- bikes %>% slice_tail(n = 30)
+```
+
+# 3.EDA
+## Taking a look at the dataset
+```{r echo=FALSE}
+datatable(bikes)
+```
+
+## Checking for missing values
+```{r echo=FALSE}
+bikes %>% map_dfr(~ sum(is.na(.)))
+```
+
+## Plotting the numerical (predictor) variables
+```{r fig 01, echo=FALSE}
+bikes %>% 
+	pivot_longer(2:9, names_to = "name", values_to = "value") %>% 
+	ggplot(aes(value)) +
+	geom_histogram() +
+	scale_y_log10() +
+	labs(x = "Value", y = "Count (log scale)") +
+	theme(text = element_text(size = 12)) +
+	facet_wrap(~ name)
+```
+
+## Plotting the numerical (target) variable
+```{r fig 02, echo=FALSE}
+bikes %>% 
+	ggplot(aes(rentals)) +
+	geom_histogram() +
+	labs(x = "Value", y = "Count") +
+	theme(text = element_text(size = 12))
+```
+
+# 4.MODELLING
+```{r include = FALSE}
+set.seed(123)
+df_split <- initial_split(df, strata = rentals)
+df_train <- training(df_split)
+df_test <- testing(df_split)
+```
+
+```{r include = FALSE}
+set.seed(2022)
+folds <- vfold_cv(df_train, strata = rentals)
+```
+
+```{r include = FALSE}
+bikes_rec <- recipe(rentals ~ ., data = df_split) %>%
+  step_rm(date) %>% 
+  step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+```{r include = FALSE}
+model_control <- control_grid(save_pred = TRUE)
+model_metrics <- metric_set(rmse, mae, huber_loss)
+```
+
+## 4.1 Desicion Trees
+```{r include = FALSE}
+dt_spec <- 
+  decision_tree(
+    mode = "regression",
+    engine = "rpart",
+    cost_complexity = tune(),
+    tree_depth = tune(),
+    min_n = tune())
+```
+
+```{r include = FALSE}
+dt_wf <-
+  workflow() %>%
+  add_recipe(bikes_rec) %>% 
+  add_model(dt_spec)
+```
+
+```{r include = FALSE}
+dt_grid <- grid_latin_hypercube(
+  cost_complexity(),
+  tree_depth(),
+  min_n(),
+  size = 15)
+```
+
+```{r include = FALSE}
+doParallel::registerDoParallel()
+set.seed(1234)
+dt_tune <- dt_wf %>%
+  tune_grid(folds,
+            metrics = model_metrics,
+            control = model_control,
+            grid = dt_grid)
+```
+
+```{r include = FALSE}
+dt_best <- dt_tune %>% select_best(metric = "rmse")
+autoplot(dt_tune)
+dt_best
+```
+
+```{r include = FALSE}
+dt_train_results <- dt_tune %>%
+  filter_parameters(parameters = dt_best) %>%
+  collect_metrics()
+dt_train_results
+```
+
+```{r include = FALSE}
+dt_test_results <- dt_wf %>% 
+  finalize_workflow(dt_best) %>%
+  last_fit(split = df_split, metrics = model_metrics)
+dt_results <- dt_test_results %>% collect_metrics()
+dt_results
+```
+
+## Predicting on new data
+```{r}
+dt_fit <- dt_wf %>%
+  finalize_workflow(dt_best) %>%
+  fit(df_test)
+pred_dt<-augment(dt_fit, new_data = new_data, type = NULL) %>% 
+	select(rentals, .pred)
+pred_dt
+```
+
+## 4.2 Random Forest
+```{r include = FALSE}
+rf_spec <- 
+  rand_forest(mtry = tune(),
+              min_n = tune(),
+              trees = tune()) %>%
+  set_engine("ranger") %>% 
+  set_mode("regression")
+```
+
+```{r include = FALSE}
+rf_wflow <-
+  workflow() %>%
+  add_recipe(bikes_rec) %>% 
+  add_model(rf_spec)
+```
+
+```{r include = FALSE}
+rf_grid <- grid_latin_hypercube(
+  finalize(mtry(), df_train),
+  trees(),
+  min_n(),
+  size = 15)
+```
+
+```{r include = FALSE}
+doParallel::registerDoParallel()
+set.seed(1234)
+rf_res <-
+  rf_wflow %>% 
+  tune_grid(
+    resamples = folds, 
+    metrics = model_metrics,
+    control = model_control,
+    grid = rf_grid)
+```
+
+```{r include = FALSE}
+rf_best <- rf_res %>% select_best(metric = "rmse")
+autoplot(rf_res)
+rf_best
+```
+
+```{r include = FALSE}
+rf_train_results <- rf_res %>% 
+  filter_parameters(parameters = rf_best) %>% 
+  collect_metrics()
+rf_train_results
+```
+
+```{r include = FALSE}
+rf_test_res <- rf_wflow %>% 
+  finalize_workflow(rf_best) %>%
+  last_fit(split = df_split, metrics = model_metrics)
+rf_results <- rf_test_res %>% collect_metrics()
+rf_results
+```
+
+## Predicting on new data
+```{r}
+rf_fit <- rf_wflow %>%
+  finalize_workflow(rf_best) %>%
+  fit(df_test)
+pred_rf<-augment(rf_fit, new_data = new_data, type = NULL) %>% 
+	select(rentals, .pred)
+pred_rf
+```
+
+## 4.3 Support Vector Machine
+```{r include = FALSE}
+svm_spec <- 
+  svm_poly(
+    mode = "regression",
+    engine = "kernlab",
+    cost = tune(),
+    degree = tune(),
+    scale_factor = tune())
+```
+
+```{r include = FALSE}
+svm_wf <-
+  workflow() %>%
+  add_recipe(bikes_rec) %>% 
+  add_model(svm_spec)
+```
+
+```{r include = FALSE}
+svm_grid <- grid_latin_hypercube(
+  cost(),
+  degree(),
+  scale_factor(),
+  size = 15)
+```
+
+```{r include = FALSE}
+doParallel::registerDoParallel()
+set.seed(1234)
+svm_tune <- svm_wf %>%
+  tune_grid(folds,
+            metrics = model_metrics,
+            control = model_control,
+            grid = svm_grid)
+```
+
+```{r include = FALSE}
+svm_best <- svm_tune %>% select_best(metric = "rmse")
+autoplot(svm_tune)
+svm_best
+```
+
+```{r include = FALSE}
+svm_train_results <- svm_tune %>%
+  filter_parameters(parameters = svm_best) %>%
+  collect_metrics()
+svm_train_results
+```
+
+```{r include = FALSE}
+svm_test_results <- svm_wf %>% 
+  finalize_workflow(svm_best) %>%
+  last_fit(split = df_split, metrics = model_metrics)
+svm_results <- svm_test_results %>% collect_metrics()
+svm_results
+```
+
+## Predicting on new data
+```{r}
+svm_fit <- svm_wf %>%
+  finalize_workflow(svm_best) %>%
+  fit(df_test)
+pred_svm<-augment(svm_fit, new_data = new_data, type = NULL) %>% 
+	select(rentals, .pred)
+pred_svm
+```
+
+# 5.COMPARING RESULTS
+```{r include=FALSE}
+train_results <- bind_rows("Random Forest" = rf_train_results,
+                           "SVM" = svm_train_results,
+                           "Decision Trees" = dt_train_results,
+                           .id = "model")
+```
+
+```{r fig 03, echo=FALSE}
+train_results %>%
+  mutate(model = fct_reorder(model, mean)) %>%
+  ggplot(aes(.metric, mean, fill = model)) +
+  geom_col(position = "dodge") + 
+  geom_text(
+    aes(x = .metric, y = mean, label = round(mean, 2), group = model),
+    position = position_dodge(width = 1), vjust = -0.3, size = 3.5) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16)) +
+  labs(y = "Value (mean)", x = "Metric", title = "Results on training set", fill = "Model")
+```
+
+```{r include=FALSE}
+test_results <- bind_rows("Random Forest" = rf_results,
+                          "SVM" = svm_results,
+                          "Decision Trees" = dt_results,
+                          .id = "model")
+```
+
+```{r fig 04}
+test_results %>%
+  mutate(model = fct_reorder(model, .estimate)) %>%
+  ggplot(aes(.metric, .estimate, fill = model)) +
+  geom_col(position = "dodge") + 
+  geom_text(
+    aes(x = .metric, y = .estimate , label = round(.estimate, 2), group = model),
+    position = position_dodge(width = 1), vjust = -0.3, size = 3.5) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16)) + 
+  labs(y = "Value", x = "Metric", title = "Results on test set", fill = "Model")
+```
+
+# 6.PLOTTING THE DECISION TREE
+```{r fig 05}
+dt_test_results %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE, cex = 0.8)
+```

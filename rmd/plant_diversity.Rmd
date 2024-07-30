@@ -1,0 +1,445 @@
+---
+title: "Exploratory data analysis (EDA) of plant diversity in a local environment!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-07-25"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, out.width = "100%")
+```
+
+## Loading the needed packages
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggpubr)
+library(patchwork)
+library(DT)
+```
+
+## Loading the dataset
+```{r message = FALSE, warning = FALSE, echo=FALSE}
+diss<-read_csv("diss.csv") %>% mutate_if(is.character, as.factor)
+diss<-diss %>% 
+  mutate(com = fct_recode(com, "fagus_hepatica" = "a", "fagus_physospermum" = "b", "fagus_galium" = "c",
+                                       "fagus_luzula" = "d", "fagus_festuca" = "e", "fagus_brachypodium" = "f",
+                                       "pinus_fragaria" = "g", "pinus_crataegus" = "h", "quercus_cornus" = "i",
+                                       "festuca_chamaespartium" = "j", "galium_thymus" = "k", "juniperus_vaccinium" = "l",
+                                       "juniperus_vaccinium_2" = "m", "juniperus_sesleria" = "n"),
+         veg_type = fct_recode(veg_type, "forest" = "f", "subalpine" = "s"))
+datatable(diss)
+```
+
+# Exploring the numerical variables' distribution
+## Elevation
+```{r fig 01.1, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(elev)) +
+  geom_histogram(bins = 30)
+```
+
+## Slope
+```{r fig 01.2, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(slope)) +
+  geom_histogram(bins = 30)
+```
+
+## Species number/0.1 ha, and species number/1 m2
+```{r fig 02, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  pivot_longer(cols = s_ha:s_m2, names_to = "variable", values_to = "Species_number") %>% 
+  ggplot(aes(Species_number)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~variable)
+```
+
+## Vegetation cover
+```{r fig 03, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  pivot_longer(cols = tree_cover:herb_cover, names_to = "variable", values_to = "Vegetation_cover") %>% 
+  ggplot(aes(Vegetation_cover)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~variable)
+```
+
+## Stems
+```{r fig 04, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  filter(veg_type == "forest") %>% 
+  pivot_longer(cols = x1_5:x_35, names_to = "variable", values_to = "Stem_number") %>% 
+  ggplot(aes(Stem_number)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~ variable, ncol = 4)
+```
+
+# Exploring nominal and factor variables
+```{r fig 05, message = FALSE, warning = FALSE, echo=FALSE}
+p1<-diss %>% filter(veg_type == "forest") %>% 
+  count(com) %>% 
+  summarise(com, prop = n/sum(n)) %>% 
+  mutate(com = fct_reorder(com, prop)) %>% 
+  ggplot(aes(com, prop, fill = com)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "forest", y = "Percent", x = "Vegetation type") +
+  coord_flip()
+p2<-diss %>% filter(veg_type == "subalpine") %>% 
+  count(com) %>% 
+  summarise(com, prop = n/sum(n)) %>% 
+  mutate(com = fct_reorder(com, prop)) %>% 
+  ggplot(aes(com, prop, fill = com)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "subalpine", y = "Percent", x = NULL) +
+  coord_flip()
+p1 + p2
+```
+
+```{r fig 06, message = FALSE, warning = FALSE, echo=FALSE}
+p1<-diss %>% filter(veg_type == "forest") %>% 
+  count(exp) %>% 
+  summarise(exp, prop = n/sum(n)) %>% 
+  mutate(exp = fct_reorder(exp, prop)) %>% 
+  ggplot(aes(exp, prop, fill = exp)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "forest", y = "Percent", x = "Slope exposition") +
+  coord_flip()
+p2<-diss %>% filter(veg_type == "subalpine") %>% 
+  count(exp) %>% 
+  summarise(exp, prop = n/sum(n)) %>% 
+  mutate(exp = fct_reorder(exp, prop)) %>% 
+  ggplot(aes(exp, prop, fill = exp)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "subalpine", y = "Percent", x = NULL) +
+  coord_flip()
+p1 + p2
+```
+
+```{r fig 07, message = FALSE, warning = FALSE, echo=FALSE}
+p1<-diss %>% filter(veg_type == "forest") %>% 
+  count(top) %>% 
+  summarise(top, prop = n/sum(n)) %>% 
+  mutate(top = fct_reorder(top, prop)) %>% 
+  ggplot(aes(top, prop, fill = top)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "forest", y = "Percent", x = "Slope topography") +
+  coord_flip()
+p2<-diss %>% filter(veg_type == "subalpine") %>% 
+  count(top) %>% 
+  summarise(top, prop = n/sum(n)) %>% 
+  mutate(top = fct_reorder(top, prop)) %>% 
+  ggplot(aes(top, prop, fill = top)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "subalpine", y = "Percent", x = NULL) +
+  coord_flip()
+p1 + p2
+```
+
+```{r fig 08, message = FALSE, warning = FALSE, echo=FALSE}
+p1<-diss %>% filter(veg_type == "forest") %>% 
+  mutate(invasive = as.factor(invasive)) %>% 
+  count(invasive) %>% 
+  summarise(invasive, prop = n/sum(n)) %>% 
+  mutate(invasive = fct_reorder(invasive, prop)) %>% 
+  ggplot(aes(invasive, prop, fill = invasive)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "forest", y = "Percent", x = "Invasive species number/0.1 ha") +
+  coord_flip()
+p2<-diss %>% filter(veg_type == "subalpine") %>% 
+  mutate(invasive = as.factor(invasive)) %>% 
+  count(invasive) %>% 
+  summarise(invasive, prop = n/sum(n)) %>% 
+  mutate(invasive = fct_reorder(invasive, prop)) %>% 
+  ggplot(aes(invasive, prop, fill = invasive)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "subalpine", y = "Percent", x = NULL) +
+  coord_flip()
+p1 + p2
+```
+
+```{r fig 09, message = FALSE, warning = FALSE, echo=FALSE}
+p1<-diss %>% filter(veg_type == "forest") %>% 
+  mutate(rare = as.factor(rare)) %>% 
+  count(rare) %>% 
+  summarise(rare, prop = n/sum(n)) %>% 
+  mutate(rare = fct_reorder(rare, prop)) %>% 
+  ggplot(aes(rare, prop, fill = rare)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "forest", y = "Percent", x = "Rare species number/0.1 ha") +
+  coord_flip()
+p2<-diss %>% filter(veg_type == "subalpine") %>% 
+  mutate(rare = as.factor(rare)) %>% 
+  count(rare) %>% 
+  summarise(rare, prop = n/sum(n)) %>% 
+  mutate(rare = fct_reorder(rare, prop)) %>% 
+  ggplot(aes(rare, prop, fill = rare)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = "subalpine", y = "Percent", x = NULL) +
+  coord_flip()
+p1 + p2
+```
+
+# Plant diversity at 0.1 ha scale. Relationship with different variables.
+## Elevation
+```{r fig 10, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(elev, s_ha)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+  labs(title = NULL, x = "Elevation (m)", y = "Plant species number/0.1ha", fill = NULL) +
+  theme(text = element_text(size = 16)) +
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope
+```{r fig 11, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(slope, s_ha)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+  labs(title = NULL, x = "Slope (º)", y = "Plant species number/0.1ha", fill = NULL) +
+  theme(text = element_text(size = 16)) +
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope exposition
+```{r fig 12, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(exp = fct_reorder(exp, s_ha)) %>% 
+  ggplot(aes(exp, s_ha, fill = exp)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/0.1ha", x = "Slope exposition") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope topography
+```{r fig 13, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(top = fct_reorder(top, s_ha)) %>% 
+  ggplot(aes(top, s_ha, fill = top)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/0.1ha", x = "Slope topography") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Invasive species
+```{r fig 14, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(inv = fct_reorder(as.factor(invasive), s_ha)) %>% 
+  ggplot(aes(inv, s_ha, fill = inv)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/0.1ha", x = "Invasive species number/0.1ha") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Rare species
+```{r fig 15, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(rare = fct_reorder(as.factor(rare), s_ha)) %>% 
+  ggplot(aes(rare, s_ha, fill = rare)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/0.1ha", x = "Rare species number/0.1ha") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Vegetation cover
+```{r fig 16, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% pivot_longer(cols = tree_cover:herb_cover, names_to = "cover", values_to = "value") %>% 
+  ggplot(aes(value, s_ha)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+	scale_x_log10() +
+  labs(title = NULL, x = "Cover (%) (log scale)", y = "Plant species number/0.1ha", fill = NULL) +
+  theme(text = element_text(size = 16), legend.position = "right") +
+  facet_wrap(~cover, ncol = 3, scales = "free_x")
+```
+
+## Stem diameter (Forest age). Stems are faceted by stem diameter at breast height (DBH) measured in cm.
+```{r fig 17, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% filter(veg_type == "forest") %>% 
+  pivot_longer(cols = x1_5:x_35, names_to = "stems", values_to = "value") %>% 
+  ggplot(aes(value, s_ha)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+	scale_x_log10() +
+  labs(title = NULL, x = "Stem number/0.1ha (log scale)", y = "Plant species number/0.1ha", fill = NULL) +
+  theme(text = element_text(size = 16), legend.position = "right") +
+  facet_wrap(~stems, ncol = 4, scales = "free_x")
+```
+
+# Comparing different vegetation types by plant species number - testing hypotheses.
+## Forests
+```{r fig 18, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% filter(veg_type == "forest") %>% 
+  mutate(com = fct_reorder(com, s_ha)) %>% 
+  ggboxplot(x = "com", y = "s_ha", color = "com", add = "jitter", legend = "none", 
+            xlab = "Forest types", ylab = "Plant species number/0.1ha", palette = "Paired") +
+  rotate_x_text(angle = 45) +
+  geom_hline(yintercept = median(diss$s_ha), linetype = 2) + 
+  stat_compare_means(method = "anova", label.y = 60) +       
+  stat_compare_means(label = "p.signif", method = "wilcox.test", ref.group = "fagus_hepatica")                    
+```
+
+## Subalpine meadows
+```{r fig 19, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% filter(veg_type == "subalpine") %>% 
+  mutate(com = fct_reorder(com, s_ha)) %>% 
+  ggboxplot(x = "com", y = "s_ha", color = "com", add = "jitter", legend = "none", 
+            xlab = "Subalpine meadow types", ylab = "Plant species number/0.1ha", palette = "Dark2") +
+  rotate_x_text(angle = 45) +
+  geom_hline(yintercept = median(diss$s_ha), linetype = 2) + 
+  stat_compare_means(method = "anova", label.y = 70) +       
+  stat_compare_means(label = "p.signif", method = "wilcox.test", ref.group = "festuca_chamaespartium")                    
+```
+
+# Plant diversity at 1 m2 scale. Relationship with different variables.
+## Elevation
+```{r fig 20, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(elev, s_m2)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+  labs(title = NULL, x = "Elevation (m)", y = "Plant species number/1 m2", fill = NULL) +
+  theme(text = element_text(size = 16)) +
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope
+```{r fig 21, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  ggplot(aes(slope, s_m2)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+  labs(title = NULL, x = "Slope (º)", y = "Plant species number/1 m2", fill = NULL) +
+  theme(text = element_text(size = 16), legend.position = "right") +
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope exposition
+```{r fig 22, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(exp = fct_reorder(exp, s_m2)) %>% 
+  ggplot(aes(exp, s_m2, fill = exp)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/1 m2", x = "Slope exposition") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Slope topography
+```{r fig 23, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(top = fct_reorder(top, s_m2)) %>% 
+  ggplot(aes(top, s_m2, fill = top)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/1 m2", x = "Slope topography") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Invasive species
+```{r fig 24, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(inv = fct_reorder(as.factor(invasive), s_m2)) %>% 
+  ggplot(aes(inv, s_m2, fill = inv)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Paired") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/1 m2", x = "Invasive species number/0.1ha") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Rare species
+```{r fig 25, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% 
+  mutate(rare = fct_reorder(as.factor(rare), s_m2)) %>% 
+  ggplot(aes(rare, s_m2, fill = rare)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  labs(title = NULL, y = "Plant species number/1 m2", x = "Rare species number/0.1ha") +
+  coord_flip() + 
+  facet_wrap(~veg_type, ncol = 2, scales = "free_x")
+```
+
+## Vegetation cover
+```{r fig 26, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% pivot_longer(cols = tree_cover:herb_cover, names_to = "cover", values_to = "value") %>% 
+  ggplot(aes(value, s_m2)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+	scale_x_log10() +
+  labs(title = NULL, x = "Cover (%) (log scale)", y = "Plant species number/1 m2", fill = NULL) +
+  theme(text = element_text(size = 16)) +
+  facet_wrap(~cover, ncol = 3, scales = "free_x")
+```
+
+# Comparing different vegetation types by plant species number - testing hypotheses.
+## Forests
+```{r fig 27, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% filter(veg_type == "forest") %>% 
+  mutate(com = fct_reorder(com, s_m2)) %>% 
+  ggboxplot(x = "com", y = "s_m2", color = "com", add = "jitter", legend = "none", 
+            xlab = "Forest types", ylab = "Plant species number/1 m2", palette = "Paired") +
+  rotate_x_text(angle = 45) +
+  geom_hline(yintercept = median(diss$s_m2), linetype = 2) + 
+  stat_compare_means(method = "anova", label.y = 15) +       
+  stat_compare_means(label = "p.signif", method = "wilcox.test", ref.group = "fagus_galium")                    
+```
+## Subalpine meadows
+```{r fig 28, message = FALSE, warning = FALSE, echo=FALSE}
+diss %>% filter(veg_type == "subalpine") %>% 
+  mutate(com = fct_reorder(com, s_m2)) %>% 
+  ggboxplot(x = "com", y = "s_m2", color = "com", add = "jitter", legend = "none", 
+            xlab = "Subalpine meadow types", ylab = "Plant species number/1 m2", palette = "Dark2") +
+  rotate_x_text(angle = 45) +
+  geom_hline(yintercept = median(diss$s_m2), linetype = 2) + 
+  stat_compare_means(method = "anova", label.y = 30) +       
+  stat_compare_means(label = "p.signif", method = "wilcox.test", ref.group = "festuca_chamaespartium")                    
+```

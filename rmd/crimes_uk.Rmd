@@ -1,0 +1,250 @@
+---
+title: "EDA of UK crimes from 2010 to 2014!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-09-03"
+output: html_document
+---
+
+```{r message = FALSE, warning = FALSE}
+# Loading required packages
+library(tidyverse)
+```
+
+```{r message = FALSE, warning = FALSE}
+# Loading the data set
+crimes<-read_csv("crimes_uk.csv")
+```
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, out.width = "100%")
+```
+
+## EDA
+## Top 10 administrative units with highest number of crimes
+```{r fig01, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  count(cja) %>% 
+  mutate(cja = fct_reorder(cja, n)) %>% 
+  slice_max(cja, n = 10) %>% 
+  ggplot(aes(cja, n, fill = cja)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none") +
+  labs(y = "Number of crimes", x = NULL) +
+  coord_flip()
+```
+
+## Crime number by year and administrative unit (top 10 only)
+```{r fig02, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  count(year, cja) %>% 
+  mutate(cja = fct_reorder(cja, n)) %>% 
+  slice_max(cja, n = 50) %>% 
+  ggplot(aes(cja, n, fill = cja)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and type of perpetrator
+```{r fig03, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  count(year, type) %>% 
+  mutate(type = fct_reorder(type, n)) %>% 
+  ggplot(aes(type, log(n), fill = type)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes (log scale)", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and sex of perpetrator
+```{r fig04, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  mutate(sex = fct_recode(sex, "Other" = "Other (companies, public bodies, etc)")) %>% 
+  count(year, sex) %>% 
+  mutate(sex = fct_reorder(sex, n)) %>% 
+  ggplot(aes(sex, log(n), fill = sex)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes (log scale)", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and age band
+```{r fig05, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(ageband) %>% 
+  count(year, ageband) %>% 
+  mutate(ageband = fct_reorder(ageband, n)) %>% 
+  ggplot(aes(ageband, log(n), fill = ageband)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes (log scale)", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and age group
+```{r fig06, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(agegroup) %>% 
+  count(year, agegroup) %>% 
+  mutate(agegroup = fct_relevel(agegroup, "10-11", "12-14", "15-17", "18-20", "21-24", "25-29", "30-39",
+                                "40-49", "50-59", "60+")) %>% 
+  ggplot(aes(agegroup, n, fill = agegroup)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Case number by year and court type
+```{r fig07, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(courttype) %>% 
+  count(year, courttype) %>% 
+  mutate(courttype = fct_reorder(courttype, n)) %>% 
+  ggplot(aes(courttype, n, fill = courttype)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of cases", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and offence type
+```{r fig08, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(offencetype) %>% 
+  count(year, offencetype) %>% 
+  mutate(offencetype = fct_reorder(offencetype, n)) %>% 
+  ggplot(aes(offencetype, n, fill = offencetype)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and offence group
+```{r fig09, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(offencegroup) %>% 
+  count(year, offencegroup) %>% 
+  mutate(offencegroup = fct_reorder(offencegroup, n)) %>% 
+  ggplot(aes(offencegroup, n, fill = offencegroup)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of crimes", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Crime number by year and offence (top 10 only)
+```{r fig10, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(offence) %>% 
+  count(year, offence) %>% 
+  mutate(offence = fct_reorder(offence, n)) %>% 
+  slice_max(offence, n = 50) %>% 
+  ggplot(aes(offence, n, fill = offence)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Number of cases by year and verdict
+```{r fig11, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(found_guilty) %>% 
+  count(year, found_guilty) %>% 
+  mutate(found_guilty = fct_reorder(found_guilty, n)) %>% 
+  ggplot(aes(found_guilty, n, fill = found_guilty)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of cases", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Number of cases by year and sentence
+```{r fig12, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(sentenced) %>% 
+  count(year, sentenced) %>% 
+  mutate(sentenced = fct_reorder(sentenced, n)) %>% 
+  ggplot(aes(sentenced, n, fill = sentenced)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of cases", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Number of cases by year and detailed sentence (top 10 only)
+```{r fig13, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(detailed_sentence) %>% 
+  filter(!detailed_sentence == "Other") %>% 
+  count(year, detailed_sentence) %>% 
+  mutate(detailed_sentence = fct_reorder(detailed_sentence, n)) %>% 
+  slice_max(detailed_sentence, n = 50) %>% 
+  ggplot(aes(detailed_sentence, log(n), fill = detailed_sentence)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of cases (log scale)", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```
+
+## Number of cases by year and sentence length (top 10 only)
+```{r fig14, echo = FALSE, message = FALSE, warning = FALSE}
+crimes %>% 
+  drop_na(sentencelength) %>% 
+  count(year, sentencelength) %>% 
+  mutate(sentencelength = fct_reorder(sentencelength, n)) %>% 
+  slice_max(sentencelength, n = 50) %>% 
+  ggplot(aes(sentencelength, n, fill = sentencelength)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  theme(text = element_text(size = 14), legend.position = "none") +
+  labs(y = "Number of cases", x = NULL) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip()
+```

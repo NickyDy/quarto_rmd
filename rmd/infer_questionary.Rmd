@@ -1,0 +1,201 @@
+---
+title: "Using inferential statistics to analyze questionnaire qualitative data about physical exercise!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-07-29"
+output: html_document
+---
+
+# Loading the needed packages
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+library(patchwork)
+library(statsExpressions)
+library(DT)
+library(ggstatsplot)
+```
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, out.width = "100%")
+```
+
+# Loading the dataset
+```{r message = FALSE, warning = FALSE}
+infer<-read_csv("infer.csv") %>% select(1:8)
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+datatable(infer, caption = "Table 1. Questionnaire qualitative data about physical exercise")
+```
+
+## Athletism - checking out the proportions/percentages between levels and testing for equality
+```{r fig01, echo = FALSE, message = FALSE, warning = FALSE}
+athletism<-contingency_table(data = infer, x = athletism)
+infer %>% 
+  count(athletism) %>% 
+  summarise(athletism, prop = n/sum(n)) %>% 
+  mutate(athletism = fct_inorder(athletism)) %>% 
+  ggplot(aes(athletism, prop, fill = athletism)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = NULL, subtitle = parse(text = athletism$expression),
+       caption = "*Note: The test is highly significant, which rejects the null hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+### In this case, I need to sample more "nonathletic" respondents to make the levels more equal within this group.
+
+# Gender
+```{r fig02, echo = FALSE, message = FALSE, warning = FALSE}
+gender<-contingency_table(data = infer, x = gender)
+infer %>% 
+  count(gender) %>% 
+  summarise(gender, prop = n/sum(n)) %>% 
+  mutate(gender = fct_inorder(gender)) %>% 
+  ggplot(aes(gender, prop, fill = gender)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = NULL, subtitle = parse(text = gender$expression),
+       caption = "*Note: The test is not significant, which cannot reject the null hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+# Age
+```{r fig03, echo = FALSE, message = FALSE, warning = FALSE}
+age<-contingency_table(data = infer, x = age)
+infer %>% 
+  count(age) %>% 
+  summarise(age, prop = n/sum(n)) %>% 
+  mutate(age = fct_inorder(rev(age))) %>% 
+  ggplot(aes(age, prop, fill = age)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Age groups", subtitle = parse(text = age$expression),
+       caption = "*Note: The test is significant, which rejects the null hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+### I need to sample more respondents from the underrepresented levels like 40-44, 35-39, and 45-49.
+
+
+## Frequency of the physical exercise
+```{r fig04, echo = FALSE, message = FALSE, warning = FALSE}
+q1<-contingency_table(data = infer, x = q1)
+infer %>% 
+  count(q1) %>% 
+  summarise(q1, prop = n/sum(n)) %>% 
+  mutate(q1 = fct_relevel(q1, "4-7 times a week", "2-3 times a week", "Once a week")) %>% 
+  ggplot(aes(q1, prop, fill = q1)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Frequency of exercise", subtitle = parse(text = q1$expression),
+       caption = "*Note: The test is nonsignificant, which cannot reject the null hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+## Duration of the physical exercise
+```{r fig05, echo = FALSE, message = FALSE, warning = FALSE}
+q2<-contingency_table(data = infer, x = q2)
+infer %>% 
+  count(q2) %>% 
+  summarise(q2, prop = n/sum(n)) %>% 
+  mutate(q2 = fct_relevel(q2, "20-40 min", "60-90 min", "> 2 hours")) %>% 
+  ggplot(aes(q2, prop, fill = q2)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Dark2") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 18), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Duration of exercise", subtitle = parse(text = q2$expression),
+       caption = "*Note: The test is highly significant, which rejects the null hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+### I need to sample more respondents from "> 2 hours" group level.
+
+## Sport type
+```{r fig06, echo = FALSE, message = FALSE, warning = FALSE}
+q3<-contingency_table(data = infer, x = q3)
+infer %>% 
+  count(q3) %>% 
+  summarise(q3, prop = n/sum(n)) %>% 
+  mutate(q3 = fct_relevel(fct_reorder(q3, prop))) %>% 
+  ggplot(aes(q3, prop, fill = q3)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Paired") +
+  geom_text(aes(label = scales:: percent(prop)), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  theme(text = element_text(size = 16), legend.position = "none", 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Sport type", subtitle = parse(text = q3$expression),
+       caption = "*Note: The test is highly significant, which rejects the hypothesis for equal proportions/percentages") +
+  coord_flip()
+```
+
+### My sample is highly unbalanced. I need to sample more respondents from underrepresented sports.
+
+# ANALYSIS OF QUESTIONARY ANSWERS IN THE CONTEXT OF EXERCISE FREQUENCY AND DURATION
+### I have decided that the most important variables that I want to dig into are exercise frequency and duration. Therefore, my attention turns to them. I will look for associations between those two variables and the different respondents' answers. Also, I will check out for equal proportions between the question answers within the levels of those two most important for me variables.
+
+```{r fig07, echo = FALSE, message = FALSE, warning = FALSE}
+infer %>% 
+  mutate(q1 = fct_relevel(q1, "Once a week", "2-3 times a week", "4-7 times a week")) %>% 
+  mutate(q4 = fct_relevel(q4, "Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree")) %>% 
+  ggbarstats(q4, q1, bf.message = FALSE, legend.title = "Answer:", xlab = "Frequency of exercise", 
+  					 title = "NUTRITIONAL INTAKE AFFECTS MY PERFORMANCE?", ggplot.component = theme(text = element_text(size = 16)))
+```
+
+```{r fig08, echo = FALSE, message = FALSE, warning = FALSE}
+infer %>% 
+  mutate(q2 = fct_relevel(q2, "20-40 min", "60-90 min", "> 2 hours")) %>% 
+  mutate(q4 = fct_relevel(q4, "Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree")) %>% 
+  ggbarstats(q4, q2, bf.message = FALSE, legend.title = "Answer:", xlab = "Duration of exercise", 
+  					 title = "NUTRITIONAL INTAKE AFFECTS MY PERFORMANCE?", ggplot.component = theme(text = element_text(size = 16)))
+```
+
+```{r fig09, echo = FALSE, message = FALSE, warning = FALSE}
+infer %>% 
+  mutate(q1 = fct_relevel(q1, "Once a week", "2-3 times a week", "4-7 times a week")) %>% 
+  mutate(q5 = fct_relevel(q5, "Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree")) %>% 
+  ggbarstats(q5, q1, bf.message = FALSE, legend.title = "Answer:", xlab = "Frequency of exercise", 
+  					 title = "EXERCISE HELPS WITH MY MOOD?", ggplot.component = theme(text = element_text(size = 16)))
+```
+
+### Based on their answers, this shows me that the frequency of exercise significantly affects the mood of respondents. The more frequently respondents exercise, the more strongly they agree with the question statement.
+
+```{r fig10, echo = FALSE, message = FALSE, warning = FALSE}
+infer %>% 
+	mutate(q2 = fct_relevel(q2, "20-40 min", "60-90 min", "> 2 hours")) %>% 
+  mutate(q5 = fct_relevel(q5, "Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree")) %>% 
+  ggbarstats(q5, q2, bf.message = FALSE, legend.title = "Answer:", xlab = "Duration of exercise", 
+  					 title = "EXERCISE HELPS WITH MY MOOD?", ggplot.component = theme(text = element_text(size = 16)))
+```

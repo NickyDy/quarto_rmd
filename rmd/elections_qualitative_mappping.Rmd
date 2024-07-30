@@ -1,0 +1,217 @@
+---
+title: "Качествено картиране на изборите в България през 2021-2022 година!"
+output: html_document
+date: "2022-11-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 15, fig.asp = 0.618, message = F, warning = F, echo = F, error = F)
+```
+## 1.Зареждане на необходимите библиотеки
+```{r echo=TRUE}
+library(tidyverse)
+library(sf)
+```
+
+## 2.Зареждане на данните от изборите
+```{r echo=TRUE}
+votes <- read_csv("~/Desktop/R/Rmd/votes.csv", col_types = "ffffff")
+```
+
+```{r}
+obshtini_map <- st_read("~/Desktop/R/Rmd/bg_map.gpkg", layer = "gadm36_BGR_2") %>% 
+  select(oblast = NAME_1, oblast_bg = NL_NAME_1, obshtina = NAME_2, obshtina_bg = NL_NAME_2, geom) %>% 
+  mutate(obshtina_bg = case_when(
+  obshtina == "Strumyani" ~ "Струмяни",
+  obshtina == "Kameno" ~ "Камено",
+  obshtina == "Primorsko" ~ "Приморско",
+  obshtina == "Ruen" ~ "Руен",
+  obshtina == "Sungurlare" ~ "Сунгурларе",
+  obshtina == "Dobrich-selska" ~ "Добричка",
+  obshtina == "Dobrich" ~ "Добрич",
+  obshtina == "General Toshevo" ~ "Генерал Тошево",
+  obshtina == "Krushari" ~ "Крушари",
+  obshtina == "Stolichna" ~ "София-град",
+  obshtina == "Mineralni Bani" ~ "Минерални бани",
+  obshtina == "Stambolovo" ~ "Стамболово",
+  obshtina == "Chernoochene" ~ "Черноочене",
+  obshtina == "Skalna Glava" ~ "Скална глава",
+  obshtina == "Kocherinovo" ~ "Кочериново",
+  obshtina == "Kyustendil" ~ "Кюстендил",
+  obshtina == "Nevestino" ~ "Невестино",
+  obshtina == "Rila" ~ "Рила",
+  obshtina == "Treklyano" ~ "Трекляно",
+  obshtina == "Letnitsa" ~ "Летница",
+  obshtina == "Georgy Damyanovo" ~ "Георги Дамяново",
+  obshtina == "Medkovets" ~ "Медковец",
+  obshtina == "Valchedram" ~ "Вълчедръм",
+  obshtina == "Yakimovo" ~ "Якимово",
+  obshtina == "Lesichevo" ~ "Лесичово",
+  obshtina == "Kovachevtsi" ~ "Ковачевци", 
+  obshtina == "Pazardzhik" ~ "Пазарджик", 
+  obshtina == "Dolna Mitropoliya" ~ "Долна Митрополия",
+  obshtina == "Gulyantsi" ~ "Гулянци",
+  obshtina == "Iskar" ~ "Искър",
+  obshtina == "Pordim" ~ "Пордим",
+  obshtina == "Maritsa" ~ "Марица",
+  obshtina == "Parvomay" ~ "Първомай",
+  obshtina == "Rodopi" ~ "Родопи",
+  obshtina == "Loznitsa" ~ "Лозница",
+  obshtina == "Samuil" ~ "Самуил",
+  obshtina == "Dve Mogili" ~ "Две могили",
+  obshtina == "Slivo Pole" ~ "Сливо поле", 
+  obshtina == "Tsenovo" ~ "Ценово", 
+  obshtina == "Vetovo" ~ "Ветово",
+  obshtina == "Gara Hitrino" ~ "Гара Хитрино",
+  obshtina == "Kaolinovo" ~ "Каолиново",
+  obshtina == "Nikola Kozlevo" ~ "Никола Козлево",
+  obshtina == "Smyadovo" ~ "Смядово",
+  obshtina == "Venets" ~ "Венец",
+  obshtina == "Glavinitsa" ~ "Главница",
+  obshtina == "Kainardzha" ~ "Кайнарджа",
+  obshtina == "Sitovo" ~ "Ситово", 
+  obshtina == "Borino" ~ "Борино", 
+  obshtina == "Anton" ~ "Антон",
+  obshtina == "Dolna Banya" ~ "Долна баня",
+  obshtina == "Dragoman" ~ "Драгоман",
+  obshtina == "Gorna Malina" ~ "Горна Малина",
+  obshtina == "Mirkovo" ~ "Мирково",
+  obshtina == "Pirdop" ~ "Пирдоп",
+  obshtina == "Bratya Daskalovi" ~ "Братя Даскалови",
+  obshtina == "Opan" ~ "Опан",
+  obshtina == "Avren" ~ "Аврен",
+  obshtina == "Dalgopol" ~ "Дългопол",
+  obshtina == "Suvorovo" ~ "Суворово", 
+  obshtina == "Valchi Dol" ~ "Вълчи дол", 
+  obshtina == "Vetrino" ~ "Ветрино",
+  obshtina == "Polski Trambesh" ~ "Полски Тръмбеш",
+  obshtina == "Strazhitsa" ~ "Стражица",
+  obshtina == "Boinitsa" ~ "Бойница",
+  obshtina == "Chuprene" ~ "Чупрене",
+  obshtina == "Dimovo" ~ "Димово",
+  obshtina == "Gramada" ~ "Грамада",
+  obshtina == "Kula" ~ "Кула",
+  obshtina == "Makresh" ~ "Макреш",
+  obshtina == "Ruzh" ~ "Руж", 
+  obshtina == "Vidin" ~ "Видин", 
+  obshtina == "Borovan" ~ "Борован", 
+  obshtina == "Hairedin" ~ "Хайредин",
+  obshtina == "Knezha" ~ "Кнежа",
+  obshtina == "Pleven" ~ "Плевен",
+  obshtina == "Ivanovo" ~ "Иваново",
+  obshtina == "Rousse" ~ "Русе",
+  obshtina == "Krivodol" ~ "Криводол", TRUE ~ obshtina_bg)) %>% 
+  mutate(oblast_bg = case_when(
+    oblast == "Kardzhali" ~ "Кърджали",
+    oblast == "Pleven" ~ "Плевен",
+    oblast == "Ruse" ~ "Русе",
+    oblast == "Sofia" ~ "София - област",
+    oblast == "Grad Sofiya" ~ "София",
+    oblast == "Targovishte" ~ "Търговище", TRUE ~ oblast_bg)) %>% 
+  mutate(oblast = fct_recode(oblast, "Sofia City" = "Grad Sofiya"),
+         obshtina_bg = fct_recode(obshtina_bg, "Столична" = "София-град"),
+         obshtina_bg = fct_recode(obshtina_bg, "Велики Преслав" = "Преслав"),
+         obshtina_bg = fct_recode(obshtina_bg, "Хитрино" = "Гара Хитрино"),
+         obshtina_bg = fct_recode(obshtina_bg, "Съединение" = "Община Съединение"),
+         obshtina_bg = fct_recode(obshtina_bg, "Главиница" = "Главница"),
+         obshtina_bg = fct_recode(obshtina_bg, "Павел баня" = "Павел Баня"),
+         obshtina_bg = fct_recode(obshtina_bg, "Ружинци" = "Руж"),
+         obshtina_bg = fct_recode(obshtina_bg, "Кърджали" = "Скална глава"),
+         obshtina_bg = fct_recode(obshtina_bg, "Търговище" = "Търговищка област"))
+```
+
+```{r}
+colors <- c("Продължаваме Промяната" = "yellow", "ГЕРБ-СДС" = "blue", "ДПС" = "purple", "БСП ЗА БЪЛГАРИЯ" = "red",
+						"ИМА ТАКЪВ НАРОД" = "#0096FF", "ДЕМОКРАТИЧНА БЪЛГАРИЯ" = "darkblue", "ИЗПРАВИ СЕ! МУТРИ ВЪН!" = "green",
+						"ИЗПРАВИ СЕ БГ! НИЕ ИДВАМЕ!" = "green", "ПП РЕПУБЛИКАНЦИ ЗА БЪЛГАРИЯ" = "pink", "ПП ИЗПРАВИ СЕ БЪЛГАРИЯ" = "green",
+						"ГРАЖДАНСКА ПЛАТФОРМА БЪЛГАРСКО ЛЯТО" = "orange", "ВЪЗРАЖДАНЕ" = "black", "БЪЛГАРСКИ ВЪЗХОД" = "darkgreen",
+						"ВМРО" = "brown")
+```
+
+```{r fig 01}
+votes %>% 
+	filter(vote_date %in% c("Април_2021")) %>% 
+	group_by(obshtina, party) %>% 
+	summarise(s_p = sum(votes)) %>% 
+	group_by(obshtina) %>% 
+	slice_max(s_p) %>% 
+	mutate_if(is.character, as.factor)->df
+obshtini_map %>% 
+	left_join(df, by = c("obshtina_bg" = "obshtina")) %>% 
+	mutate_if(is.numeric, round, 1)->ap
+ap %>% 
+	ggplot() +
+	geom_sf(aes(fill = party), alpha = .4) +
+	geom_sf_text(aes(label = obshtina_bg), check_overlap = TRUE, size = 2.5) +
+	theme(text = element_text(size = 16), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Партия:", title = "Април, 2021") +
+	scale_fill_manual(values = colors)
+```
+
+```{r fig 02}
+votes %>% 
+	filter(vote_date %in% c("Юли_2021")) %>% 
+	group_by(obshtina, party) %>% 
+	summarise(s_p = sum(votes)) %>% 
+	group_by(obshtina) %>% 
+	slice_max(s_p) %>% 
+	mutate_if(is.character, as.factor)->df
+obshtini_map %>% 
+	left_join(df, by = c("obshtina_bg" = "obshtina")) %>% 
+	mutate_if(is.numeric, round, 1)->ap
+ap %>% 
+	ggplot() +
+	geom_sf(aes(fill = party), alpha = .4) +
+	geom_sf_text(aes(label = obshtina_bg), check_overlap = TRUE, size = 2.5) +
+	theme(text = element_text(size = 16), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Партия:", title = "Юли, 2021") +
+	scale_fill_manual(values = colors)
+```
+
+```{r fig 03}
+votes %>% 
+	filter(vote_date %in% c("Ноември_2021")) %>% 
+	group_by(obshtina, party) %>% 
+	summarise(s_p = sum(votes)) %>% 
+	group_by(obshtina) %>% 
+	slice_max(s_p) %>% 
+	mutate_if(is.character, as.factor)->df
+obshtini_map %>% 
+	left_join(df, by = c("obshtina_bg" = "obshtina")) %>% 
+	mutate_if(is.numeric, round, 1)->ap
+ap %>% 
+	ggplot() +
+	geom_sf(aes(fill = party), alpha = .4) +
+	geom_sf_text(aes(label = obshtina_bg), check_overlap = TRUE, size = 2.5) +
+	theme(text = element_text(size = 16), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Партия:", title = "Ноември, 2021") +
+	scale_fill_manual(values = colors)
+```
+
+```{r fig 04}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022")) %>% 
+	group_by(obshtina, party) %>% 
+	summarise(s_p = sum(votes)) %>% 
+	group_by(obshtina) %>% 
+	slice_max(s_p) %>% 
+	mutate_if(is.character, as.factor)->df
+obshtini_map %>% 
+	left_join(df, by = c("obshtina_bg" = "obshtina")) %>% 
+	mutate_if(is.numeric, round, 1)->ap
+ap %>% 
+	ggplot() +
+	geom_sf(aes(fill = party), alpha = .4) +
+	geom_sf_text(aes(label = obshtina_bg), check_overlap = TRUE, size = 2.5) +
+	theme(text = element_text(size = 16), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Партия:", title = "Октомври, 2022") +
+	scale_fill_manual(values = colors)
+```

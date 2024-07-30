@@ -1,0 +1,548 @@
+---
+title: "Рискови (червени) общини и секции за изборите на 02.04.2023 г.!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: 2023-02-03
+editor: visual
+format: html
+execute:
+    fig.width: 8
+    fig.asp: 0.618
+    out.width: 800
+    message: false
+    warning: false
+    echo: false
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+```
+
+```{r}
+votes <- read_rds("~/Desktop/R/data/votes.rds")
+obsh_map <- st_read("~/Desktop/R/data/obsh_map.gpkg")
+obl_map <- st_read("~/Desktop/R/data/obl_map.gpkg")
+```
+
+## ДПС
+
+```{r}
+diff <- votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, obshtina, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022, prop = diff / Октомври_2022 * 100)
+obsh_map %>%
+	left_join(diff, by = c("obshtina_bg" = "obshtina")) -> map
+map %>%
+	filter(abs(prop) > 100, prop != Inf) %>%
+	ggplot() +
+	geom_sf(data = obl_map, color = "white") +
+	geom_sf(aes(fill = prop), alpha = 0.5) +
+	#geom_sf_text(aes(label = scales::percent(prop, accuracy = 1)), 
+							# check_overlap = TRUE, size = 3) +
+	geom_sf_text(aes(label = obshtina_bg), 
+							 check_overlap = TRUE, size = 2.5, vjust = -1.5) +
+	theme(text = element_text(size = 14), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Разлика (%):",
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (по-голяма от ±100%):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Ихтиман"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Ихтиман):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Търговище"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 50) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Търговище):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Пазарджик"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 50) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 11), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Пазарджик):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Септември"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Септември):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Кирково"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 30) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Кирково):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Видин"),
+				 party == "Движение за права и свободи – ДПС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 5) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Видин):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+## ГЕРБ-СДС
+
+```{r}
+diff <- votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, obshtina, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022, prop = diff / Октомври_2022 * 100)
+obsh_map %>%
+	left_join(diff, by = c("obshtina_bg" = "obshtina")) -> map
+map %>%
+	filter(abs(prop) > 50, prop != Inf) %>%
+	ggplot() +
+	geom_sf(data = obl_map, color = "white") +
+	geom_sf(aes(fill = prop), alpha = 0.5) +
+	#geom_sf_text(aes(label = scales::percent(prop, accuracy = 1)), 
+							# check_overlap = TRUE, size = 3) +
+	geom_sf_text(aes(label = obshtina_bg), 
+							 check_overlap = TRUE, size = 2.5, vjust = -1.5) +
+	theme(text = element_text(size = 14), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Разлика (%):",
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (по-голяма от ±50%):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Лом"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Лом):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Варна"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Варна):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Стара Загора"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 10) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Стара Загора):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Благоевград"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 5) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Благоевград):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Казанлък"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 5) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Казанлък):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Хасково"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 5) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Хасково):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Петрич"),
+				 party == "ГЕРБ-СДС") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	filter(abs(diff) > 10) %>% 
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Петрич):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+## БСП за БЪЛГАРИЯ
+
+```{r}
+diff <- votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, obshtina, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022, prop = diff / Октомври_2022 * 100)
+obsh_map %>%
+	left_join(diff, by = c("obshtina_bg" = "obshtina")) -> map
+map %>%
+	filter(abs(prop) > 50, prop != Inf) %>%
+	ggplot() +
+	geom_sf(data = obl_map, color = "white") +
+	geom_sf(aes(fill = prop), alpha = 0.5) +
+	#geom_sf_text(aes(label = scales::percent(prop, accuracy = 1)), 
+							# check_overlap = TRUE, size = 3) +
+	geom_sf_text(aes(label = obshtina_bg), 
+							 check_overlap = TRUE, size = 2.5, vjust = -1.5) +
+	theme(text = element_text(size = 14), legend.position = "right",
+				axis.text = element_blank(),
+				axis.ticks = element_blank()) +
+	labs(x = NULL, y = NULL, fill = "Разлика (%):",
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (по-голяма от ±50%):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Кресна"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Кресна):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Нови пазар"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Нови пазар):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Созопол"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Созопол):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Дряново"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Дряново):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Гоце Делчев"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Гоце Делчев):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```
+
+```{r}
+votes %>% 
+	filter(vote_date %in% c("Октомври_2022", "Април_2023"), 
+				 obshtina == c("Гърмен"),
+				 party == "БСП за БЪЛГАРИЯ") %>% 
+	group_by(vote_date, section) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+	mutate(diff = Април_2023 - Октомври_2022) %>% 
+	mutate(section = fct_reorder(section, diff)) %>%
+	ggplot(aes(diff, section, fill = diff)) +
+	geom_col() +
+	scale_x_continuous(expand = expansion(mult = c(.01, .15))) +
+	geom_text(aes(label = diff),
+						position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 12), legend.position = "none") +
+	labs(x = "Брой гласове", y = NULL, 
+			 subtitle = paste0("Промяна в подкрепата за ", 
+			 							 diff$party, " (Община Гърмен):\nОктомври, 2022-ра -> Април, 2023-та!")) +
+	scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen")
+```

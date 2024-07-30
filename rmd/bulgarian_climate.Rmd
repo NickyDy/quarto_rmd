@@ -1,0 +1,137 @@
+---
+title: "Климатът на България за последните 20 години!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2024-05-20"
+output:
+  html_document: default
+---
+ 
+<style type = "text/css">
+.main-container {max-width: 1200px; margin-left: auto; margin-right: auto;}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 12, fig.asp = 0.618, out.width = "100%")
+```
+
+
+```{r message = FALSE, warning = FALSE, include = FALSE}
+library(tidyverse)
+library(arrow)
+```
+
+
+```{r message = FALSE, warning = FALSE, include = FALSE}
+rain<-read_parquet("~/Desktop/R/climate/rain.parquet")
+temp<-read_parquet("~/Desktop/R/climate/temp.parquet")
+```
+
+### Температура
+```{r fig 01, echo = FALSE, message = FALSE, warning = FALSE}
+mean_temp_year <- temp %>% 
+  drop_na(temp) %>% 
+  filter(elev < 1200) %>%
+  summarise(m = round(mean(temp), 1), n = n(), .by = year)
+temp %>%
+  drop_na(temp) %>% 
+  filter(elev < 1200) %>%
+  mutate(m = mean(temp)) %>%
+  group_by(year) %>%
+  mutate(col = mean(temp) > m) %>%
+  ggplot(aes(year, temp)) +
+  geom_boxplot(aes(fill = col), fatten = NULL) +
+  geom_point(data = mean_temp_year, aes(year, m), color = "white") +
+  geom_text(data = mean_temp_year, aes(year, m, label = m), 
+            position = position_dodge(width = 1), size = 4, vjust = -0.5) +
+  geom_hline(aes(yintercept = mean(temp)), linewidth = 0.5, lty = 2, color = "black") +
+  labs(x = "Години", y = "Средна годишна температура (\u00B0C)", fill = "Легенда:") +
+  theme(text = element_text(size = 14), legend.position = "top") +
+  scale_fill_manual(values = c("#00BFC4", "#F8766D"), labels = c("По-студена от средното",
+                                                                 "По-топла от средното")) +
+  scale_y_continuous(n.breaks = 20)
+```
+
+### Валежи
+```{r fig 02, echo = FALSE, message = FALSE, warning = FALSE}
+mean_rain_year <- rain %>% 
+  drop_na(rain) %>% 
+  filter(elev < 1200) %>%
+  group_by(station, year) %>%
+  mutate(sum = sum(rain)) %>%
+  ungroup() %>% 
+  summarise(m = round(mean(sum), 0), n = n(), .by = year)
+rain %>%
+  drop_na(rain) %>% 
+  filter(elev < 1200) %>%
+  group_by(station, year) %>%
+  mutate(sum = sum(rain)) %>%
+  ungroup() %>%
+  mutate(su = mean(sum)) %>%
+  group_by(year) %>%
+  mutate(col = mean(sum) > su) %>% 
+  ggplot(aes(year, sum)) +
+  geom_boxplot(aes(fill = col), fatten = NULL) +
+  geom_point(data = mean_rain_year, aes(year, m), color = "white") +
+  geom_text(data = mean_rain_year, aes(year, m, label = m), 
+            position = position_dodge(width = 1), size = 4, vjust = -0.5) +
+  geom_hline(aes(yintercept = mean(sum)), linewidth = 0.5, lty = 2, color = "black") +
+  labs(x = "Години", y = "Годишно количество на валежите (mm)", fill = "Легенда:") +
+  theme(text = element_text(size = 14), legend.position = "top") +
+  scale_fill_manual(values = c("#F8766D", "#00BFC4"), 
+                    labels = c("По-суха от средното", "По-дъждовна от средното")) +
+  scale_y_continuous(n.breaks = 10)
+```
+
+### Температура на ниво десетилетие
+```{r fig 03, echo = FALSE, message = FALSE, warning = FALSE}
+mean_temp_decade <- temp %>% 
+  drop_na(temp) %>% 
+  filter(elev < 1200) %>%
+  summarise(m = round(mean(temp), 2), n = n(), .by = decade)
+temp %>%
+  drop_na(temp) %>% 
+  filter(elev < 1200) %>%
+  mutate(m = mean(temp)) %>%
+  group_by(decade) %>%
+  mutate(col = mean(temp) > m) %>%
+  ggplot(aes(decade, temp)) +
+  geom_boxplot(aes(fill = col), fatten = NULL) +
+  geom_point(data = mean_temp_decade, aes(decade, m), color = "white") +
+  geom_text(data = mean_temp_decade, aes(decade, m, label = m), 
+            position = position_dodge(width = 1), size = 4, vjust = -0.5) +
+  geom_hline(aes(yintercept = mean(temp)), linewidth = 0.5, lty = 2, color = "black") +
+  labs(x = "Десетилетие", y = "Средна годишна температура (\u00B0C)", fill = "Легенда:") +
+  theme(text = element_text(size = 14), legend.position = "top") +
+  scale_fill_manual(values = c("#00BFC4", "#F8766D"),
+                    labels = c("По-студено от средното", "По-топло от средното"))
+```
+
+### Валежи на ниво десетилетие
+```{r fig 04, echo = FALSE, message = FALSE, warning = FALSE}
+mean_rain_decade <- rain %>% 
+  drop_na(rain) %>% 
+  filter(elev < 1200) %>%
+  group_by(station, year, decade) %>%
+  mutate(sum = sum(rain)) %>%
+  ungroup() %>% 
+  summarise(m = round(mean(sum), 0), n = n(), .by = decade)
+rain %>%
+  drop_na(rain) %>% 
+  filter(elev < 1200) %>%
+  group_by(station, year, decade) %>%
+  mutate(sum = sum(rain)) %>%
+  ungroup() %>%
+  mutate(su = mean(sum)) %>%
+  group_by(decade) %>%
+  mutate(col = mean(sum) > su) %>%
+  ggplot(aes(decade, sum)) +
+  geom_boxplot(aes(fill = col), fatten = NULL) +
+  geom_point(data = mean_rain_decade, aes(decade, m), color = "white") +
+  geom_text(data = mean_rain_decade, aes(decade, m, label = m), 
+            position = position_dodge(width = 1), size = 4, vjust = -0.5) +
+  geom_hline(aes(yintercept = mean(sum)), linewidth = 0.5, lty = 2, color = "black") +
+  labs(x = "Десетилетие", y = "Средно годишно количество на валежите (mm)", fill = "Легенда:") +
+  theme(text = element_text(size = 14), legend.position = "top") +
+  scale_fill_manual(values = c("#F8766D", "#00BFC4"),
+                    labels = c("По-сухо от средното", "По-дъждовно от средното"))
+```

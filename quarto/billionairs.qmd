@@ -1,0 +1,119 @@
+---
+title: "Forbes billionaires!"
+format: html
+editor: visual
+author: "Nikolay Dyakov"
+date: "2023-08-08"
+execute:
+    fig.width: 8
+    fig.asp: 0.618
+    out.width: 800
+    message: false
+    warning: false
+    echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+bill <- read_csv("~/Desktop/R/data/forbes_billionaires.csv") %>% janitor::clean_names()
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  ggplot(aes(net_worth, name, fill = country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = country, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  ggplot(aes(net_worth, name, fill = country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = net_worth, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  ggplot(aes(net_worth, name, fill = country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = source, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  ggplot(aes(net_worth, name, fill = country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = residence, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  ggplot(aes(net_worth, name, fill = status)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = status, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth),
+         edu = str_extract(education, "^(.+?),"),
+         edu = str_remove(edu, ",")) %>%
+  ggplot(aes(net_worth, name, fill = edu)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = edu, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.2))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```
+
+```{r}
+bill %>% 
+  slice_max(order_by = net_worth, n = 70) %>% 
+  mutate(name = fct_reorder(name, net_worth)) %>% 
+  mutate(self = case_when(self_made == TRUE ~ "Self made",
+                          self_made == FALSE ~ "Not self made")) %>% 
+  ggplot(aes(net_worth, name, fill = self)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = self, hjust = -0.1), size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0.005, 0.1))) +
+  #scale_fill_brewer(palette = "Paired") +
+  labs(y = NULL, x = "Милиарди $", fill = NULL) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 0, hjust = 1))
+```

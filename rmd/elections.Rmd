@@ -1,0 +1,272 @@
+---
+title: "Сравнителен анализ на парламентарните избори в България през 2021-2022 година!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-09-25"
+output:
+  html_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 15, fig.asp = 0.618, out.width = "100%")
+```
+
+## Зареждане на необходимите библиотеки
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+```
+
+## Зареждане на данните
+```{r message = FALSE, warning = FALSE}
+votes<-read_csv("votes.csv", col_types = "ffffff")
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+colors <- c("Продължаваме Промяната" = "yellow", "ГЕРБ-СДС" = "blue", "ДПС" = "purple", "БСП ЗА БЪЛГАРИЯ" = "red",
+						"ИМА ТАКЪВ НАРОД" = "#0096FF", "ДЕМОКРАТИЧНА БЪЛГАРИЯ" = "darkblue", "ИЗПРАВИ СЕ! МУТРИ ВЪН!" = "green",
+						"ИЗПРАВИ СЕ БГ! НИЕ ИДВАМЕ!" = "green", "ПП РЕПУБЛИКАНЦИ ЗА БЪЛГАРИЯ" = "pink", "ПП ИЗПРАВИ СЕ БЪЛГАРИЯ" = "green",
+						"ГРАЖДАНСКА ПЛАТФОРМА БЪЛГАРСКО ЛЯТО" = "orange", "ВЪЗРАЖДАНЕ" = "black", "БЪЛГАРСКИ ВЪЗХОД" = "darkgreen",
+						"ВМРО" = "brown")
+```
+
+## Сравнение на изборните резултати по брой гласове (включени са само парламентарно представените партии) за цялата страна
+```{r fig 01, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes >= 115000) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .33))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = NULL) +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+## Сравнение на изборните резултати в проценти за цялата страна
+```{r fig 02, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(votes = sum(votes)) %>% 
+	mutate(prop = votes/sum(votes)) %>% 
+	mutate_if(is.numeric, round, 3) %>% 
+	mutate(party = fct_reorder(party, prop)) %>% 
+	filter(prop >= 0.04) %>% 
+	ggplot(aes(prop, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .33))) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 20)) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = scales::percent(prop, accuracy = 0.01)), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18), axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+	labs(x = NULL, y = NULL, title = NULL) +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+## 10 примера за секции със съмнение за купен вот
+```{r fig 03, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "121100019") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "с.Долни Цибър") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 04, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "152400206") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "с.Буковлък") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 05, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "132900002") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "гр.Септември") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 06, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "263900033") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>3) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "гр.Самоков") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 07, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "132900028") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "с.Семчиново") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 08, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "63100008") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "гр.Оряхово") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 09, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "262000012") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>3) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "гр.Ихтиман") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 10, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "62100016") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "с.Ракево") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 11, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "122900064") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "с.Габровница") +
+	facet_wrap(~vote_date, ncol = 4)
+```
+
+```{r fig 12, echo = FALSE, message = FALSE, warning = FALSE}
+votes %>% 
+	filter(code == "11100019") %>% 
+	mutate(vote_date = fct_relevel(vote_date, "Октомври_2022", "Ноември_2021", "Юли_2021", "Април_2021")) %>% 
+	group_by(vote_date, party) %>% 
+	summarise(sum_votes = sum(votes)) %>% 
+	mutate(party = fct_reorder(party, sum_votes)) %>% 
+	filter(sum_votes>5) %>% 
+	ggplot(aes(sum_votes, party, fill = party)) +
+	geom_col(position = "dodge", show.legend = F) +
+	guides(fill = guide_legend(reverse = TRUE)) +
+	scale_y_discrete(labels = function(x) str_wrap(x, 25)) +
+	scale_x_continuous(expand = expansion(mult = c(.05, .20))) +
+	scale_fill_manual(values = colors) +
+	geom_text(aes(label = sum_votes), position = position_dodge(width = 1), hjust = -0.1, size = 5) +
+	theme(text = element_text(size = 18)) + 
+	labs(y = NULL, x = "Брой гласове", title = "гр.Гоце Делчев") +
+	facet_wrap(~vote_date, ncol = 4)
+```

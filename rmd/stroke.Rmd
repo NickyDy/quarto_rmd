@@ -1,0 +1,151 @@
+---
+title: "Stroke prediction with FFTrees algorithm!"
+author: "NickD - email: nickydyakov@gmail.com"
+output: html_document
+date: "2022-11-17"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, message = F, warning = F, echo = F)
+```
+
+# 1.Loading the needed packages
+```{r echo=TRUE}
+library(tidyverse)
+library(FFTrees)
+library(DT)
+```
+
+# 2.Loading the dataset
+```{r echo=TRUE}
+stroke <- read_csv("~/Desktop/R/csv/stroke.csv", col_types = "dfdfffffddff") %>%
+  mutate(
+    stroke = fct_recode(stroke, "TRUE" = "1", "FALSE" = "0"),
+    hypertension = fct_recode(hypertension, "Yes" = "1", "No" = "0"),
+    heart_disease = fct_recode(heart_disease, "Yes" = "1", "No" = "0"),
+    stroke = as.logical(stroke)
+  ) %>%
+  mosaic::shuffle() %>% 
+	select(-id, -orig.id)
+datatable(stroke)
+```
+
+# 3. EDA
+## Checking for missing values
+```{r echo=FALSE}
+stroke %>% map_dfr(~ sum(is.na(.)))
+stroke <- stroke %>% drop_na(bmi)
+stroke %>% map_dfr(~ sum(is.na(.)))
+```
+
+## Plotting the numerical (predictor) variables
+```{r fig 01, echo=FALSE}
+stroke %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(1:3, names_to = "name", values_to = "value") %>%
+  ggplot(aes(value)) +
+  geom_histogram() +
+  labs(x = "Value", y = "Count") +
+  theme(text = element_text(size = 12)) +
+  facet_wrap(~name)
+```
+
+## Plotting the nominal (predictor) variables
+```{r fig 02, echo=FALSE}
+stroke %>%
+  count(gender) %>%
+  ggplot(aes(n, gender, fill = gender)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(hypertension) %>%
+  ggplot(aes(n, hypertension, fill = hypertension)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(heart_disease) %>%
+  ggplot(aes(n, heart_disease, fill = heart_disease)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(ever_married) %>%
+  ggplot(aes(n, ever_married, fill = ever_married)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(work_type) %>%
+  ggplot(aes(n, work_type, fill = work_type)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(Residence_type) %>%
+  ggplot(aes(n, Residence_type, fill = Residence_type)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+stroke %>%
+  count(smoking_status) %>%
+  ggplot(aes(n, smoking_status, fill = smoking_status)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+```
+
+## Plotting the nominal (target) variable
+```{r fig 03, echo=FALSE}
+stroke %>%
+  count(stroke) %>%
+  ggplot(aes(n, stroke, fill = stroke)) +
+  geom_col() +
+  labs(y = NULL) +
+  theme(text = element_text(size = 16))
+```
+
+# 4.Splitting the data
+```{r echo=TRUE}
+stroke_train <- stroke %>% slice(1:4000)
+stroke_test <- stroke %>% slice(4001:4500)
+new_data <- stroke %>% slice(4501:4510)
+```
+
+# 5.Modelling
+```{r}
+stroke_fit <- FFTrees(
+  formula = stroke ~ .,
+  data = stroke_train,
+  data.test = stroke_test,
+  decision.labels = c("No Stroke", "Stroke"),
+  do.comp = T
+)
+stroke_fit
+```
+
+# 6.Plotting the results
+```{r fig 04, echo=FALSE}
+plot(stroke_fit,
+  data = "test",
+  main = "Risk of having a stroke"
+)
+```
+
+# 7.Ranking the predictor accuracies
+```{r fig 05, echo=FALSE}
+plot(stroke_fit, what = "cues", data = "train")
+```
+
+# 8.Predicting on the new data
+```{r echo=FALSE}
+predict(stroke_fit, new_data)
+```
+
+# 9.Comparing predictive performance across algorithms
+```{r}
+stroke_fit$competition$test %>% 
+	mutate_if(is.numeric, round, 3) %>% 
+	datatable()
+```

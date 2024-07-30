@@ -1,0 +1,171 @@
+---
+title: "Non-interactive tables!"
+output: html_document
+date: "Date: 2023-08-07"
+author: "Author: Nikolay Dyakov"
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type = "text/css">
+.main-container {max-width: 1400px; margin-left: auto; margin-right: auto;}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+```{r}
+library(tidyverse)
+library(DT)
+library(gt)
+library(gtExtras)
+```
+
+```{r}
+diss <- read_csv("~/Desktop/R/data/diss.csv")
+```
+
+# 2.1 Non-interactive tables. Adding tab spanners.
+```{r}
+diss %>% 
+  slice_sample(n = 10) %>% 
+  gt() %>% 
+   tab_spanner(
+    label = "Categorical",
+    columns = com:top) %>% 
+  tab_spanner(
+    label = "Environment",
+    columns = elev:slope) %>% 
+  tab_spanner(
+    label = "Diversity",
+    columns = s_ha:e)
+```
+### 2.1 Formatting currency.
+```{r}
+diss %>% 
+  slice_sample(n = 10) %>% 
+  gt() %>% 
+  fmt_currency(columns = e, decimals = 3, currency = "EUR") %>% 
+  fmt_currency(columns = n2, decimals = 3, currency = "BGN", placement = "right")
+```
+### 2.2 Alining to the left and decreasing font size.
+```{r}
+diss %>% 
+  slice_sample(n = 10) %>% 
+  gt() %>% 
+   cols_align(
+    align = "left",
+    columns = c(com:top)
+  ) %>% 
+  tab_style(
+    style = cell_text(size = px(12)),
+    locations = cells_body(
+      columns = c(elev:slope)
+    )
+  )
+```
+### 2.3 Adding tab header and subtitle.
+```{r}
+ diss %>% 
+  slice_sample(n = 10) %>% 
+   select(plot:annuals) %>% 
+  gt() %>% 
+   tab_header(
+    title = md("Vegetation data of **Vitosha mountain**"),
+    subtitle = "Most sampled variables on the south slope"
+  )
+```
+### 2.4 Adding tab source note.
+```{r}
+diss %>% 
+  slice_sample(n = 10) %>% 
+   select(plot:annuals) %>% 
+  gt() %>% 
+   tab_header(
+    title = md("Vegetation data of **Vitosha mountain**"),
+    subtitle = "Most sampled variables on the south slope"
+  ) %>% 
+tab_source_note(
+    source_note = md(
+      "Source: Dyakov, 2013"
+    )
+  )
+```
+### 2.5 Summarizing selected columns.
+```{r}
+ diss %>% 
+  select(plot:e) %>% 
+  slice_sample(n = 10) %>% 
+   group_by(veg_type) %>% 
+   gt() %>% 
+    summary_rows(
+    groups = everything(),
+    columns = elev:e,
+    fns = list(
+      min = ~ min(., na.rm = TRUE),
+      max = ~ max(., na.rm = TRUE),
+      mean = ~ mean(., na.rm = TRUE),
+      median = ~ median(., na.rm = TRUE),
+      s.d. = ~ sd(., na.rm = TRUE)
+    )
+  )
+```
+### 2.6 Adding grand summary.
+```{r}
+  diss %>% 
+  slice_sample(n = 10) %>% 
+  select(plot:e) %>% 
+   group_by(veg_type) %>% 
+   gt() %>% 
+    summary_rows(
+    groups = everything(),
+    columns = elev:e,
+    fns = list(
+      min = ~ min(., na.rm = TRUE),
+      max = ~ max(., na.rm = TRUE),
+      mean = ~ mean(., na.rm = TRUE),
+      median = ~ median(., na.rm = TRUE),
+      s.d. = ~ sd(., na.rm = TRUE)
+    )
+  ) %>% 
+  grand_summary_rows(
+    columns = elev:e,
+    fns = list(
+      min = ~ min(., na.rm = TRUE),
+      max = ~ max(., na.rm = TRUE),
+      mean = ~ mean(., na.rm = TRUE),
+      median = ~ median(., na.rm = TRUE),
+      s.d. = ~ sd(., na.rm = TRUE)))
+```
+### 2.7 Adding colors to the summary and grand summary tables.
+```{r}
+ diss %>% 
+  slice_sample(n = 10) %>% 
+  select(plot:e) %>% 
+   group_by(veg_type) %>% 
+   gt() %>% 
+    summary_rows(
+    groups = everything(),
+    columns = elev:e,
+    fns = list(
+      min = ~ min(., na.rm = TRUE),
+      max = ~ max(., na.rm = TRUE),
+      mean = ~ mean(., na.rm = TRUE),
+      median = ~ median(., na.rm = TRUE),
+      s.d. = ~ sd(., na.rm = TRUE)
+    )
+  ) %>% 
+  grand_summary_rows(
+    columns = elev:e,
+    fns = list(
+      min = ~ min(., na.rm = TRUE),
+      max = ~ max(., na.rm = TRUE),
+      mean = ~ mean(., na.rm = TRUE),
+      median = ~ median(., na.rm = TRUE),
+      s.d. = ~ sd(., na.rm = TRUE))) %>% 
+  tab_options(
+    summary_row.background.color = "lightblue",
+    grand_summary_row.background.color = "lightgreen"
+  )
+```

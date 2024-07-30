@@ -1,0 +1,111 @@
+---
+title: "Modelling bank default with FFTrees!"
+author: "NickD - email: nickydyakov@gmail.com"
+output: html_document
+date: "2022-11-19"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, message = F, warning = F, echo = F)
+```
+
+# 1.Loading the needed packages
+```{r echo=TRUE}
+library(tidyverse)
+library(tidymodels)
+library(themis)
+library(FFTrees)
+library(janitor)
+```
+
+# 2.Loading the dataset
+```{r echo=TRUE}
+bank_default <- read_csv("~/Desktop/R/csv/bank_default.csv", col_types = "dfddf") %>%
+  clean_names() %>%
+  mutate(
+    defaulted = fct_recode(defaulted, "TRUE" = "1", "FALSE" = "0"),
+    employed = fct_recode(employed, "Yes" = "1", "No" = "0")
+  ) %>% select(-index)
+```
+
+# 3.EDA
+## Checking for missing values
+```{r echo=FALSE}
+bank_default %>% map_dfr(~ sum(is.na(.)))
+```
+
+## Is the target variable ballanced?
+```{r}
+bank_default %>% 
+	count(defaulted) %>% 
+	ggplot(aes(n, defaulted, fill = defaulted)) +
+	geom_col(show.legend = F)
+```
+
+# 4.Splitting the data
+```{r echo=TRUE}
+set.seed(2022)
+split <- initial_split(bank_default, strata = defaulted)
+train <- training(split)
+test <- testing(split)
+val <- slice_sample(bank_default, n = 10)
+```
+
+# 5.Building a recipe to ballance the target variable
+```{r}
+bank_recipe <- recipe(~., train) %>%
+  step_downsample(defaulted, under_ratio = 1) %>%
+  prep() %>%
+  bake(new_data = NULL)
+bank_recipe
+```
+
+## Is the target variable ballanced now?
+```{r}
+bank_recipe %>% 
+	count(defaulted) %>% 
+	ggplot(aes(n, defaulted, fill = defaulted)) +
+	geom_col(show.legend = F)
+```
+
+```{r}
+train_last <- train %>% mutate(defaulted = as.logical(defaulted))
+test_last <- test %>% mutate(defaulted = as.logical(defaulted))
+```
+
+# 6.Modelling
+```{r}
+default_fit <- FFTrees(
+  formula = defaulted ~ .,
+  data = train_last,
+  data.test = test_last,
+  decision.labels = c("No Default", "Default"),
+  do.comp = T
+)
+default_fit
+```
+
+# 7.Plotting the results
+```{r fig 04, echo=FALSE}
+plot(default_fit,
+  data = "test",
+  main = "Risk of Default"
+)
+```
+
+# 8. Predicting on new data
+```{r}
+predict(default_fit, newdata = val)
+```
+
+# 8.Ranking the predictor accuracies
+```{r fig 05, echo=FALSE}
+plot(default_fit, what = "cues", data = "train")
+```
+
+# 9.Comparing predictive performance across algorithms
+```{r}
+default_fit$competition$test %>%
+  mutate_if(is.numeric, round, 3) %>%
+  knitr::kable()
+```

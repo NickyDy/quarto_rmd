@@ -1,0 +1,100 @@
+---
+title: "Interactive tables!"
+author: 'Author: Nikolay Dyakov'
+date: "Date: 2023-08-07"
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+<style type = "text/css">
+.main-container {max-width: 1400px; margin-left: auto; margin-right: auto;}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+```{r}
+library(tidyverse)
+library(DT)
+```
+
+```{r}
+diss <- read_csv("~/Desktop/R/data/diss.csv")
+```
+
+# 1. Interactive tables.
+
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable()
+```
+### 1.1 Editable cells.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable(editable = "cell")
+```
+### 1.2 Editable and non-editable cells by rows.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable(editable = list(target = 'row', disable = list(columns = c(1:5))))
+```
+### 1.3 Removing rownames.
+```{r}
+diss %>%
+  select(plot:rare) %>%
+  datatable(rownames = F)
+```
+### 1.4 Renaming columns.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable(colnames = LETTERS[1:13])
+```
+### 1.5 Adding table caption.
+```{r}
+diss %>%
+  select(plot:rare) %>%
+  datatable(caption = "Table 1. Sample plots")
+```
+### 1.6 Adding filters.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable(rownames = F, filter = 'top')
+```
+### 1.7 Adding currency and rounding to fourth digit.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable() %>% 
+  formatCurrency(c("elev", "slope"), currency = "\U20AC") %>% 
+  formatRound("e", 4)
+```
+### 1.8 Adding colors and bockground.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable() %>%
+  formatStyle("plot", fontWeight = 'bold', color = 'blue', backgroundColor = '#feb8cd')
+```
+### 1.9 Adding colors without background.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable() %>%
+  formatStyle("elev", fontWeight = "bold", color = styleInterval(c(1500), c("#69cfd5", "#fd6d98")))
+```
+### 1.10 Adding buttons.
+```{r}
+diss %>% 
+  select(plot:rare) %>% 
+  datatable(filter = 'top', extensions = 'Buttons', options = list(dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+```

@@ -1,0 +1,315 @@
+---
+title: "Sentiment analysis of Lady GaGa's song lyrics!"
+author: "NickD - email: nickydyakov@gmail.com"
+output: html_document
+date: "2022-09-24"
+---
+
+```{r message = FALSE, warning = FALSE}
+# Loading the needed packages
+library(tidyverse)
+library(tidytext)
+library(patchwork)
+library(wordcloud)
+library(reshape2)
+```
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, out.width = "100%")
+```
+
+```{r message = FALSE, warning = FALSE}
+# Loading the data set
+lady_gaga<-read_csv("ladygaga.csv", col_types = "fffffDc") %>% 
+  janitor::clean_names() %>% 
+  select(-1)
+```
+
+```{r include = FALSE}
+# Tidying
+tidy_lady_gaga<-lady_gaga %>% 
+  unnest_tokens(word, lyric)
+```
+
+```{r include = FALSE}
+# Loading the NRC lexicon for positive and negative sentiments
+nrc_positive <- get_sentiments("nrc") %>%
+  filter(sentiment == "positive")
+nrc_negative <- get_sentiments("nrc") %>%
+  filter(sentiment == "negative")
+```
+
+## The Fame (2008)
+```{r include = FALSE}
+# Loading the stop-words data set and joining with Amazon data
+the_fame<-tidy_lady_gaga %>% 
+  filter(album == "The Fame")
+data(stop_words)
+the_fame <- the_fame %>%
+  anti_join(stop_words, by = "word")
+```
+
+```{r fig 01, echo = FALSE, message = FALSE, warning = FALSE}
+# Most popular positive words
+p1<-the_fame %>%
+  inner_join(nrc_positive, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 5) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#00BFC4") +
+  labs(title = "Positive words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+
+# Most popular negative words
+p2<-the_fame %>%
+  inner_join(nrc_negative, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#F8766D") +
+  labs(title = "Negative words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+p1 + p2
+```
+
+## Wordcloud
+```{r fig 02, echo = FALSE, message = FALSE, warning = FALSE}
+pal<-brewer.pal(8, "Dark2")
+the_fame %>%
+anti_join(stop_words, by = "word") %>%
+count(word) %>%
+with(wordcloud(word, n, max.words = 100, colors = pal, random.color = T))
+```
+
+## Positive and negative wordcloud
+```{r fig 03, echo = FALSE, message = FALSE, warning = FALSE}
+the_fame %>%
+inner_join(get_sentiments("bing"), by = "word") %>%
+count(word, sentiment, sort = TRUE) %>%
+acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+comparison.cloud(colors = c("#F8766D", "#00BFC4"), max.words = 100)
+```
+
+## Born This Way (2011)
+```{r include = FALSE}
+# Loading the stop-words data set and joining with Amazon data
+born_this_way<-tidy_lady_gaga %>% 
+  filter(album == "Born This Way")
+data(stop_words)
+born_this_way <- born_this_way %>%
+  anti_join(stop_words, by = "word")
+```
+
+```{r fig 04, echo = FALSE, message = FALSE, warning = FALSE}
+# Most popular positive words
+p3<-born_this_way %>%
+  inner_join(nrc_positive, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#00BFC4") +
+  labs(title = "Positive words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+
+# Most popular negative words
+p4<-born_this_way %>%
+  inner_join(nrc_negative, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#F8766D") +
+  labs(title = "Negative words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+p3 + p4
+```
+
+## Wordcloud
+```{r fig 05, echo = FALSE, message = FALSE, warning = FALSE}
+pal<-brewer.pal(8, "Dark2")
+born_this_way %>%
+anti_join(stop_words, by = "word") %>%
+count(word) %>%
+with(wordcloud(word, n, max.words = 100, colors = pal, random.color = T))
+```
+
+## Positive and negative wordcloud
+```{r fig 06, echo = FALSE, message = FALSE, warning = FALSE}
+born_this_way %>%
+inner_join(get_sentiments("bing"), by = "word") %>%
+count(word, sentiment, sort = TRUE) %>%
+acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+comparison.cloud(colors = c("#F8766D", "#00BFC4"), max.words = 100)
+```
+
+## Artpop (2013)
+```{r include = FALSE}
+# Loading the stop-words data set and joining with Amazon data
+artpop<-tidy_lady_gaga %>% 
+  filter(album == "ARTPOP")
+data(stop_words)
+artpop <- artpop %>%
+  anti_join(stop_words, by = "word")
+```
+
+```{r fig 07, echo = FALSE, message = FALSE, warning = FALSE}
+# Most popular positive words
+p5<-artpop %>%
+  inner_join(nrc_positive, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#00BFC4") +
+  labs(title = "Positive words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+
+# Most popular negative words
+p6<-artpop %>%
+  inner_join(nrc_negative, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#F8766D") +
+  labs(title = "Negative words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+p5 + p6
+```
+
+## Wordcloud
+```{r fig 08, echo = FALSE, message = FALSE, warning = FALSE}
+pal<-brewer.pal(8, "Dark2")
+artpop %>%
+anti_join(stop_words, by = "word") %>%
+count(word) %>%
+with(wordcloud(word, n, max.words = 100, colors = pal, random.color = T))
+```
+
+## Positive and negative wordcloud
+```{r fig 09, echo = FALSE, message = FALSE, warning = FALSE}
+artpop %>%
+inner_join(get_sentiments("bing"), by = "word") %>%
+count(word, sentiment, sort = TRUE) %>%
+acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+comparison.cloud(colors = c("#F8766D", "#00BFC4"), max.words = 100)
+```
+
+## Joanne (2016)
+```{r include = FALSE}
+# Loading the stop-words data set and joining with Amazon data
+joanne<-tidy_lady_gaga %>% 
+  filter(album == "Joanne")
+data(stop_words)
+joanne <- joanne %>%
+  anti_join(stop_words, by = "word")
+```
+
+```{r fig 10, echo = FALSE, message = FALSE, warning = FALSE}
+# Most popular positive words
+p7<-joanne %>%
+  inner_join(nrc_positive, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 5) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#00BFC4") +
+  labs(title = "Positive words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+
+# Most popular negative words
+p8<-joanne %>%
+  inner_join(nrc_negative, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#F8766D") +
+  labs(title = "Negative words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+p7 + p8
+```
+
+## Wordcloud
+```{r fig 11, echo = FALSE, message = FALSE, warning = FALSE}
+pal<-brewer.pal(8, "Dark2")
+joanne %>%
+anti_join(stop_words, by = "word") %>%
+count(word) %>%
+with(wordcloud(word, n, max.words = 100, colors = pal, random.color = T))
+```
+
+## Positive and negative wordcloud
+```{r fig 12, echo = FALSE, message = FALSE, warning = FALSE}
+joanne %>%
+inner_join(get_sentiments("bing"), by = "word") %>%
+count(word, sentiment, sort = TRUE) %>%
+acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+comparison.cloud(colors = c("#F8766D", "#00BFC4"), max.words = 100)
+```
+
+## Chromatica (2020)
+```{r include = FALSE}
+# Loading the stop-words data set and joining with Amazon data
+chromatica<-tidy_lady_gaga %>% 
+  filter(album == "Chromatica")
+data(stop_words)
+chromatica <- chromatica %>%
+  anti_join(stop_words, by = "word")
+```
+
+```{r fig 13, echo = FALSE, message = FALSE, warning = FALSE}
+# Most popular positive words
+p9<-chromatica %>%
+  inner_join(nrc_positive, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 2) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#00BFC4") +
+  labs(title = "Positive words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+
+# Most popular negative words
+p10<-chromatica %>%
+  inner_join(nrc_negative, by = "word") %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 3) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col(fill = "#F8766D") +
+  labs(title = "Negative words", x = NULL) +
+  theme(text = element_text(size = 16)) +
+  coord_flip()
+p9 + p10
+```
+
+## Wordcloud
+```{r fig 14, echo = FALSE, message = FALSE, warning = FALSE}
+pal<-brewer.pal(8, "Dark2")
+chromatica %>%
+anti_join(stop_words, by = "word") %>%
+count(word) %>%
+with(wordcloud(word, n, max.words = 100, colors = pal, random.color = T))
+```
+
+## Positive and negative wordcloud
+```{r fig 15, echo = FALSE, message = FALSE, warning = FALSE}
+chromatica %>%
+inner_join(get_sentiments("bing"), by = "word") %>%
+count(word, sentiment, sort = TRUE) %>%
+acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+comparison.cloud(colors = c("#F8766D", "#00BFC4"), max.words = 100)
+```

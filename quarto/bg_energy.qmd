@@ -1,0 +1,587 @@
+---
+title: "Bulgarian energy historical data!"
+format: html
+editor: visual
+author: "Nikolay Dyakov"
+date: "2023-06-08"
+execute:
+    fig.width: 8
+    fig.asp: 0.618
+    out.width: 800
+    message: false
+    warning: false
+    echo: false
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+options(scipen = 100)
+```
+
+```{r}
+energy <- read_csv("https://nyc3.digitaloceanspaces.com/owid-public/data/energy/owid-energy-data.csv")
+```
+
+1.  Population.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>%
+	ggplot(aes(year, population)) +
+	geom_path() +
+  labs(x = "Year", y = "Population") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma) +
+  geom_vline(xintercept = 1980, lty = 2) +
+  annotate("label", x = 2004, y = 9250000, label = "Max population = 8,980,602") +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+2.  GDP.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, gdp)) +
+	geom_path() +
+  labs(x = "Year", y = "GDP") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma, n.breaks = 6) +
+  coord_cartesian(xlim = c(1920, 2020)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+3.  Biofuel.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, biofuel_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from biofuels,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 6) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+4.  Carbon intensity.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, carbon_intensity_elec)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "CO2(g)/kWh", title = "Carbon intensity of electricity production,\nmeasured in grams of carbon dioxide emitted\nper kilowatt-hour") +
+  scale_x_continuous(n.breaks = 8) +
+  scale_y_continuous(n.breaks = 6) +
+  coord_cartesian(xlim = c(2000, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+5.  Coal.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, coal_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from coal,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  scale_y_continuous(n.breaks = 6) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, coal_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from coal, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, coal_production)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Coal production, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  scale_y_continuous(n.breaks = 6) +
+  coord_cartesian(xlim = c(NA, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+6.  Electricity.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, electricity_demand)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity demand, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, electricity_generation)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1985, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+7.  Energy consumption.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, energy_cons_change_twh)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Annual change in primary energy consumption,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, energy_per_capita)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "kWh", title = "Primary energy consumption per capita,\nmeasured in kilowatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+8.  Fossil fuel.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, fossil_cons_change_twh)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Annual change in fossil fuel consumption,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, fossil_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from fossil fuels,\nmeasured in terawatt-hours. This is the sum of electricity\ngeneration from coal, oil and gas.") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, fossil_fuel_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Fossil fuel consumption, measured in terawatt-hours.\nThis is the sum of primary energy from coal, oil and gas.") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+9.  Gas.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, gas_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from gas,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, gas_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from gas,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, gas_production)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Gas production, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(NA, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+10. Greenhouse-gas emissions.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, greenhouse_gas_emissions)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "Million tonnes", title = "Greenhouse-gas emissions produced in the generation\nof electricity, measured in million tonnes of CO2 equivalent") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(2000, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+11. Hydro power.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, hydro_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from hydropower,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, hydro_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from hydropower,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+12. Low-carbon energy.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, low_carbon_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from low-carbon sources,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, low_carbon_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from low-carbon sources,\nmeasured in terawatt-hours. This is the sum of electricity\ngeneration from renewables and nuclear power") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+13. Net electricity import.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, net_elec_imports)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Net electricity imports, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+14. Nuclear energy.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, nuclear_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from nuclear power,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, nuclear_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from nuclear power,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+15. Oil.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, oil_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from oil,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, oil_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from oil, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1990, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, oil_production)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Oil production, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(NA, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+16. Other renewables.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, other_renewable_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from other renewables,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, other_renewable_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from other renewable sources including\nbiofuels, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+17. Electricity generation.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, per_capita_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "kWh", title = "Electricity generation per capita, measured in kilowatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1985, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+18. Primary energy.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, primary_energy_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+19. Renewables.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, renewables_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from renewables,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, renewables_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from renewables,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+20. Solar energy.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, solar_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from solar,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, solar_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from solar, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+21. Wind energy.
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, wind_consumption)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Primary energy consumption from wind,\nmeasured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+```{r}
+energy %>% 
+	filter(country == "Bulgaria") %>% 
+	ggplot(aes(year, wind_electricity)) +
+	geom_point() +
+  geom_smooth() +
+  labs(x = "Year", y = "TWh", title = "Electricity generation from wind, measured in terawatt-hours") +
+  scale_x_continuous(n.breaks = 8) +
+  coord_cartesian(xlim = c(1965, NA)) +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1),
+        axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+22. Share of electricity generation.
+
+```{r}
+energy %>% 
+  filter(country == "Bulgaria", year == 2022) %>%
+  select(year, contains("share_elec"), -low_carbon_share_elec, -fossil_share_elec, -renewables_share_elec,
+         -other_renewables_share_elec, -other_renewables_share_elec_exc_biofuel) %>%
+  pivot_longer(-year) %>%
+  mutate(across(year:name, as.factor),
+         name = fct_reorder(name, value)) %>% 
+  ggplot(aes(value, name, fill = name)) +
+  geom_col(show.legend = F) +
+  scale_x_continuous(expand = expansion(mult = c(.01, .25))) +
+  geom_text(aes(label = paste0(round(value, 1), "%")), hjust = -0.1, size = 5) +
+  labs(x = "Percent", y = "Type", title = "Share of electricity generation") +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(text = element_text(size = 14), axis.title.x = element_text(vjust = 1, hjust = 1), axis.title.y = element_text(vjust = 1, hjust = 1))
+```
+
+Data source: [OWID](https://github.com/owid)

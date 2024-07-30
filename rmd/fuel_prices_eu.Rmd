@@ -1,0 +1,134 @@
+---
+title: "Change of fuel prices in EU from 2019 to 2022!"
+author: "NickD - email: nickydyakov@gmail.com"
+date: "2022-07-23"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 10, fig.asp = 0.618, message = F, warning = F, echo = F)
+```
+
+## 1.Loading needed packages
+```{r echo=TRUE}
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(eurostat)
+```
+
+## 2.Getting the fuel price data from EUROSTAT
+```{r echo=TRUE}
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "code", time_format = "date") %>% 
+	mutate_if(is_character, as_factor)
+```
+
+## 3.Getting the mapping data
+```{r echo=TRUE}
+eurasia <- ne_countries(scale = 50, 
+                      type = "countries", 
+                      continent = c("Europe", "Asia"),
+                      country = NULL, 
+                      geounit = NULL, 
+                      sovereignty = NULL,
+                      returnclass = c("sf")) %>% 
+  select(name, iso_a2, continent, subregion, geometry) %>% 
+  mutate(iso_a2 = fct_recode(iso_a2, "UK" = "GB", "EL" = "GR"))
+```
+
+## 4.Fuel price change in 2019 (%)
+```{r fig 01}
+prices_2019 <- prc_hicp_mmor %>%
+  filter(coicop %in% c("FUEL"), time > "2018-12-31" & time < "2020-01-01") %>% 
+  group_by(geo) %>% 
+	summarise(sm = sum(values)) %>% 
+	mutate_if(is.numeric, round, 1)
+df_2019<-eurasia %>% 
+  inner_join(prices_2019, by = c("iso_a2" = "geo"))
+df_2019 %>% 
+	ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-25, 40), ylim = c(34, 72), expand = FALSE) + 
+  geom_sf_text(aes(label = sm), check_overlap = TRUE, size = 3) + 
+  scale_fill_distiller(palette = "Spectral") +
+  labs(x = NULL, y = NULL, fill = "%") +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+
+## 5.Fuel price change in 2020 (%)
+```{r fig 02}
+prices_2020 <- prc_hicp_mmor %>%
+  filter(coicop %in% c("FUEL"), time > "2019-12-31" & time < "2021-01-01") %>% 
+  group_by(geo) %>% 
+	summarise(sm = sum(values)) %>% 
+	mutate_if(is.numeric, round, 1)
+df_2020<-eurasia %>% 
+  inner_join(prices_2020, by = c("iso_a2" = "geo"))
+df_2020 %>% 
+	ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-25, 40), ylim = c(34, 72), expand = FALSE) + 
+  geom_sf_text(aes(label = sm), check_overlap = TRUE, size = 3) + 
+  scale_fill_distiller(palette = "Spectral") +
+  labs(x = NULL, y = NULL, fill = "%") +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+
+## 6.Fuel price change in 2021 (%)
+```{r fig 03}
+prices_2021 <- prc_hicp_mmor %>%
+  filter(coicop %in% c("FUEL"), time > "2020-12-31" & time < "2022-01-01") %>% 
+  group_by(geo) %>% 
+	summarise(sm = sum(values)) %>% 
+	mutate_if(is.numeric, round, 1)
+df_2021<-eurasia %>% 
+  inner_join(prices_2021, by = c("iso_a2" = "geo"))
+df_2021 %>% 
+	ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-25, 40), ylim = c(34, 72), expand = FALSE) + 
+  geom_sf_text(aes(label = sm), check_overlap = TRUE, size = 3) + 
+  scale_fill_distiller(palette = "Spectral") +
+  labs(x = NULL, y = NULL, fill = "%") +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+
+## 7.Fuel price change in 2022 (%) (January to October)
+```{r fig 04}
+prices_2022 <- prc_hicp_mmor %>%
+  filter(coicop %in% c("FUEL"), time > "2021-12-31") %>% 
+  group_by(geo) %>% 
+	summarise(sm = sum(values)) %>% 
+	mutate_if(is.numeric, round, 1)
+df_2022<-eurasia %>% 
+  inner_join(prices_2022, by = c("iso_a2" = "geo"))
+df_2022 %>% 
+	ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-25, 40), ylim = c(34, 72), expand = FALSE) + 
+  geom_sf_text(aes(label = sm), check_overlap = TRUE, size = 3) + 
+  scale_fill_distiller(palette = "Spectral") +
+  labs(x = NULL, y = NULL, fill = "%") +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+
+## 8.Cumulative fuel price change from 2019 to 2022 (%)
+```{r fig 05}
+prices_2019_2022 <- prc_hicp_mmor %>%
+  filter(coicop %in% c("FUEL"), time > "2018-12-31") %>% 
+  group_by(geo) %>% 
+	summarise(sm = sum(values)) %>% 
+	mutate_if(is.numeric, round, 1)
+df_2019_2022<-eurasia %>% 
+  inner_join(prices_2019_2022, by = c("iso_a2" = "geo"))
+df_2019_2022 %>% 
+	ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-25, 40), ylim = c(34, 72), expand = FALSE) + 
+  geom_sf_text(aes(label = sm), check_overlap = TRUE, size = 3) + 
+  scale_fill_distiller(palette = "Spectral") +
+  labs(x = NULL, y = NULL, fill = "%") +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+*Note: UK data covers only years 2019 and 2020

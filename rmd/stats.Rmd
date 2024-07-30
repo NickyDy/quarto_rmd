@@ -1,0 +1,730 @@
+---
+title: "Exploratory data analysis, inferential statistics, modeling, and visualizations!"
+output: html_document
+date: "2022-11-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 6, fig.asp = 0.618, message = F, warning = F, echo = F, out.width = 800)
+```
+
+# 1.Libraries
+```{r echo=TRUE}
+library(tidyverse)
+library(readxl)
+library(ggstatsplot)
+library(DataExplorer)
+library(dlookr)
+library(flextable)
+library(DT)
+library(jmv)
+library(pwr)
+library(eurostat)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(leaflet)
+library(factoextra)
+library(FactoMineR)
+library(ggpubr)
+```
+
+# 2.Datasets
+```{r echo=TRUE}
+diss <- read_csv("~/Desktop/R/data/diss.csv") %>% mutate_if(is.character, as.factor)
+t_test <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 14)
+one_way_anova <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 20)
+sheet_15 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 15)
+sheet_25 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 25)
+sheet_1 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 1)
+sheet_18 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 18)
+sheet_24 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 24)
+sheet_16 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 16)
+sheet_12 <- read_excel("~/Desktop/R/various/jam_data.xlsx", sheet = 12)
+stress <- read_csv("~/Desktop/R/data/stress.csv")
+```
+
+# 3.Exploratory data analysis (EDA)
+## 3.1.Introductory view of the dataset
+```{r}
+diss %>% plot_intro(theme_config = list(text = element_text(size = 18)))
+```
+
+## 3.2.Comlete overview of selected variables (do not apply for extensive datasets!)
+```{r}
+diss %>%
+  select(1:10) %>%
+  flextable()
+```
+
+## 3.3.Comlete overview of selected variables with an interactive table
+```{r}
+diss %>%
+  select(1:10) %>%
+  datatable()
+```
+
+## 3.4.Overview of some statistics of numerical variables only
+```{r}
+diss %>%
+  diagnose_numeric() %>%
+  flextable()
+```
+
+## 3.5.Descriptive statistics of selected numerical variables
+```{r}
+diss %>%
+  descriptives(
+    vars = c(elev, slope, s_ha, s_m2, invasive, rare),
+    splitBy = NULL, freq = FALSE,
+    desc = "columns", hist = FALSE, dens = FALSE, bar = FALSE,
+    barCounts = FALSE, box = F, violin = FALSE, dot = FALSE,
+    dotType = "jitter", boxMean = FALSE, boxLabelOutliers = TRUE,
+    qq = FALSE, n = TRUE, missing = TRUE, mean = TRUE,
+    median = TRUE, mode = F, sum = FALSE, sd = TRUE,
+    variance = T, range = T, min = TRUE, max = TRUE,
+    se = T, ci = T, ciWidth = 95, iqr = FALSE,
+    skew = FALSE, kurt = FALSE, sw = T, pcEqGr = FALSE,
+    pcNEqGr = 4, pc = FALSE, pcValues = "25,50,75"
+  )
+```
+
+## 3.6.Checking for missing values in selected variables or the whole dataset
+```{r}
+diss %>%
+  select(starts_with("x"), total_stems) %>%
+  map_dfr(~ sum(is.na(.))) %>%
+  flextable()
+```
+
+## 3.7.Checking the distribution of numerical variables
+```{r}
+diss %>% plot_histogram(theme_config = list(text = element_text(size = 18)))
+```
+
+## 3.8.Checking for correlation of some of the numerical variables
+```{r}
+diss %>%
+  select(elev, slope, s_ha, s_m2, invasive, rare, tree_cover, herb_cover, shrub_cover) %>%
+  plot_correlate()
+```
+
+## 3.9.Taking a look at the categorical variables
+```{r}
+diss %>% plot_bar_category(top = 10, -plot)
+```
+
+## 3.10.Taking a look at the categorical variables in the context of a selected categorical variable
+```{r}
+diss %>% plot_bar(by = "veg_type", binary_as_factor = F, theme_config = list(text = element_text(size = 18)))
+```
+
+## 3.11.Plotting numerical variables in the context of a grouping (categorical) variables
+```{r}
+diss %>%
+  select(veg_type, elev, slope, s_ha, s_m2) %>%
+  plot_boxplot(by = "veg_type", theme_config = list(text = element_text(size = 18)))
+```
+
+# 4.Inferential statistics
+## 4.1.Comparing independent samples:
+### 4.1.1.Parametric (2 groups) - Student’s and Welch’s t-test
+### Assumptions of the test:
+- Normality;
+- Independence;
+- Homogeneity of variance (homoscedasticity).
+```{r include=FALSE}
+t_test %>% descriptives(splitBy = "tutor", sw = T)
+```
+
+```{r}
+t_test %>%
+  ggbetweenstats(tutor, grade,
+    plot.type = "box", type = "p", bf.message = FALSE, xlab = "Tutor",
+    ylab = "Grade", centrality.type = "p", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.1.2.Parametric (> 2 groups) - Fisher’s and Welch’s one-way ANOVA
+### Assumptions of the test:
+- Normality;
+- Independence;
+```{r include=FALSE}
+one_way_anova %>% descriptives(splitBy = "test", sw = T)
+```
+
+```{r}
+one_way_anova %>%
+  ggbetweenstats(test, score,
+    plot.type = "box", type = "p", bf.message = FALSE, xlab = "Test",
+    ylab = "Score", centrality.type = "p", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.1.3.Nonparametric (2 groups) - Wilcoxon W (Mann-Whitney U) test
+```{r}
+sheet_15 %>%
+  ggbetweenstats(group, scores,
+    plot.type = "box", type = "np", bf.message = FALSE, xlab = "Group",
+    ylab = "Scores", centrality.type = "np", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.1.4.Nonparametric (> 2 groups) - Kruskal-Wallis Rank Sum Test
+```{r}
+sheet_25 %>%
+  ggbetweenstats(drug, mood.gain,
+    plot.type = "box", type = "np", bf.message = FALSE, xlab = "Drug", pairwise.comparisons = F,
+    ylab = "Mood gain", centrality.type = "np", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.1.5.Robust (2 groups) - Yuen’s test for trimmed means
+```{r}
+sheet_15 %>%
+  ggbetweenstats(group, scores,
+    plot.type = "box", type = "r", bf.message = FALSE, xlab = "Group", pairwise.comparisons = F,
+    ylab = "Scores", centrality.type = "r", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.1.6.Robust (> 2 groups) - Heteroscedastic one-way ANOVA for trimmed means
+```{r}
+sheet_25 %>%
+  ggbetweenstats(drug, mood.gain,
+    plot.type = "box", type = "r", bf.message = FALSE, xlab = "Drug", pairwise.comparisons = F,
+    ylab = "Mood gain", centrality.type = "r", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+## 4.2.Comparing dependent (paired) samples
+### 4.2.1.Parametric (2 groups) - Student’s t-test
+### Assumptions of the test:
+- Normality;
+- Independence;
+- Homogeneity of variance (homoscedasticity).
+```{r include=FALSE}
+sheet_1 %>% descriptives(splitBy = "treatment", sw = T)
+```
+
+```{r}
+sheet_1 %>%
+  mutate(treatment = fct_relevel(treatment, "before", "after")) %>%
+  ggwithinstats(treatment, measurement,
+    plot.type = "box", type = "p", bf.message = FALSE, xlab = "Treatment",
+    ylab = "Measurement", centrality.type = "p", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.2.2.Parametric (> 2 groups) - Fisher’s one-way repeated measures ANOVA
+### Assumptions of the test:
+- Normality;
+- Independence;
+- Homogeneity of variance (homoscedasticity).
+```{r include=FALSE}
+sheet_18 %>% descriptives(splitBy = "test", sw = T)
+```
+
+```{r}
+sheet_18 %>%
+  ggwithinstats(test, grade,
+    plot.type = "box", type = "p", bf.message = FALSE, xlab = "Test", pairwise.comparisons = F,
+    ylab = "Grade", centrality.type = "p", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.2.3.Nonparametric (2 groups) - Wilcoxon signed-rank test
+```{r}
+sheet_1 %>%
+  mutate(treatment = fct_relevel(treatment, "before", "after")) %>%
+  ggwithinstats(treatment, measurement,
+    plot.type = "box", type = "np", bf.message = FALSE, xlab = "Treatment",
+    ylab = "Measurement", centrality.type = "np", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.2.4.Nonparametric (> 2 groups) - Friedman rank sum test
+```{r}
+sheet_18 %>%
+  ggwithinstats(test, grade,
+    plot.type = "box", type = "np", bf.message = FALSE, xlab = "Test", pairwise.comparisons = F,
+    ylab = "Grade", centrality.type = "np", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.2.5.Robust (2 groups) - Yuen’s test on trimmed means for dependent samples
+```{r}
+sheet_1 %>%
+  mutate(treatment = fct_relevel(treatment, "before", "after")) %>%
+  ggwithinstats(treatment, measurement,
+    plot.type = "box", type = "r", bf.message = FALSE, xlab = "Treatment",
+    ylab = "Measurement", centrality.type = "r", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+### 4.2.6.Robust (> 2 groups) - Heteroscedastic one-way repeated measures ANOVA for trimmed means
+```{r}
+sheet_18 %>%
+  ggwithinstats(test, grade,
+    plot.type = "box", type = "r", bf.message = FALSE, xlab = "Test", pairwise.comparisons = F,
+    ylab = "Grade", centrality.type = "r", centrality.point.args = list(size = 4, color = "darkred"),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18)),
+    centrality.label.args = list(size = 5, nudge_x = 0.4, segment.linetype = 4, min.segment.length = 0)
+  )
+```
+
+## 4.3.Correlation
+## 4.3.1.Parametric - Pearson’s r
+```{r}
+diss %>%
+  ggcorrmat(
+    cor.vars = c(elev, slope, s_ha, s_m2, invasive, rare), type = "p",
+    ggcorrplot.args = list(method = "square", outline.color = "black", pch.cex = 14),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18))
+  )
+```
+
+## 4.3.2.Nonparametric - Spearman's ρ
+```{r}
+diss %>%
+  ggcorrmat(
+    cor.vars = c(elev, slope, tree_cover, herb_cover, total_stems), type = "np",
+    ggcorrplot.args = list(method = "square", outline.color = "black", pch.cex = 14),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18))
+  )
+```
+
+## 4.3.3.Robust - Percentage bend correlation
+```{r}
+diss %>%
+  ggcorrmat(
+    cor.vars = c(invasive, rare, herb_cover, shrub_cover, tree_cover, total_stems), type = "r",
+    ggcorrplot.args = list(method = "square", outline.color = "black", pch.cex = 14),
+    ggplot.component = theme(text = element_text(size = 18), plot.subtitle = element_text(size = 18))
+  )
+```
+
+## 4.4.Scatterplots with statistical details
+## 4.4.1.Parametric
+```{r}
+diss %>%
+  ggscatterstats(elev, s_ha,
+    type = "p", method = "lm", bf.message = FALSE, xlab = "Elevation (m)", ylab = "Species richness (0.1 ha)",
+    ggplot.component = theme(text = element_text(size = 16), plot.subtitle = element_text(size = 16))
+  )
+```
+
+## 4.4.2.Nonparametric
+```{r}
+diss %>%
+  ggscatterstats(slope, s_m2,
+    type = "np", method = "lm", bf.message = FALSE, xlab = "Slope (º)", ylab = "Species richness (1 m2)",
+    ggplot.component = theme(text = element_text(size = 16), plot.subtitle = element_text(size = 16))
+  )
+```
+
+## 4.4.3.Robust
+```{r}
+diss %>%
+  ggscatterstats(herb_cover, invasive,
+    type = "r", method = "lm", bf.message = FALSE, xlab = "Herb cover (%)", ylab = "Invasive species number (0.1 ha)",
+    ggplot.component = theme(text = element_text(size = 16), plot.subtitle = element_text(size = 16))
+  )
+```
+
+## 4.5.Bar charts for categorical data with statistical details
+## 4.5.1.Parametric (unpaired) - Pearson's χ2
+### Assumptions of the test:
+- Expected frequencies are sufficiently large;
+- Data are independent of one another.
+```{r}
+sheet_24 %>%
+  ggbarstats(choice, species,
+    bf.message = FALSE,
+    legend.title = "Choice:", xlab = "Species", ylab = NULL,
+    ggplot.component = theme(text = element_text(size = 18))
+  )
+```
+
+## 4.5.2.Parametric (paired) - McNemar’s test
+```{r}
+sheet_16 %>%
+  mutate(treatment = fct_relevel(treatment, "before", "after")) %>%
+  ggbarstats(response, treatment,
+    bf.message = FALSE, paired = T,
+    legend.title = "Response:", xlab = "Treatment", ylab = NULL,
+    ggplot.component = theme(text = element_text(size = 18))
+  )
+```
+
+## 4.6.Pie charts for categorical data with statistical details
+## 4.6.1.Parametric - One-sample proportion test
+```{r}
+diss %>%
+  ggpiestats(exp,
+    bf.message = FALSE,
+    legend.title = "Exposition:", xlab = NULL, ylab = NULL,
+    ggplot.component = theme(text = element_text(size = 18))
+  )
+```
+
+## 4.7.Dot-and-whisker plots for regression analyses
+```{r}
+mod <- lm(invasive ~ elev + slope + s_ha + s_m2, data = diss)
+```
+
+```{r}
+ggcoefstats(mod,
+  bf.message = FALSE, xlab = "Estimate", ylab = "Term",
+  title = "What and how influences the distribution of invasive plant species?\nTerm names from top to bottom: \n- species richness/1 m2; \n- species richness/0.1 ha; \n- slope; \n- elevation",
+  stats.label.args = list(size = 4, direction = "y", min.segment.length = 0),
+  vline.args = list(size = 0.5, linetype = "dashed"), exclude.intercept = T,
+  ggplot.component = theme(text = element_text(size = 18))
+)
+```
+
+## 4.8.Histograms with statistical details from one-sample tests
+```{r}
+diss %>%
+  gghistostats(
+    x = s_ha, type = "np", test.value = 45, bf.message = F, centrality.type = "np",
+    ggplot.component = theme(text = element_text(size = 16), plot.subtitle = element_text(size = 16)),
+    xlab = "Species richness/0.1 ha"
+  )
+```
+
+## 4.9.Power analysis
+```{r}
+an <- pwr.anova.test(k = 4, n = NULL, f = 0.25, sig.level = 0.05, power = 0.8)
+plot(an, xlab = "Sample size", ylab = "Power")
+```
+
+# 5.Modelling
+## 5.1.Linear regression
+### Assumptions of linear regression:
+- Normality;
+- Linearity;
+- Homogeneity of variance;
+- Uncorrelated predictors;
+- Residuals are independent of each other;
+- No “bad” outliers.
+```{r}
+sheet_12 %>%
+  linReg(
+    dep = dan.grump,
+    covs = vars(dan.sleep, baby.sleep),
+    factors = NULL,
+    blocks = list(list("dan.sleep", "baby.sleep")),
+    refLevels = NULL,
+    intercept = "refLevel",
+    r = TRUE,
+    r2 = TRUE,
+    r2Adj = TRUE,
+    aic = TRUE,
+    bic = FALSE,
+    rmse = TRUE,
+    modelTest = TRUE,
+    anova = F,
+    ci = FALSE,
+    ciWidth = 95,
+    stdEst = FALSE,
+    ciStdEst = FALSE,
+    ciWidthStdEst = 95,
+    norm = TRUE,
+    qqPlot = F,
+    resPlots = FALSE,
+    durbin = FALSE,
+    collin = T,
+    cooks = FALSE,
+    emMeans = list(list()),
+    ciEmm = TRUE,
+    ciWidthEmm = 95,
+    emmPlots = TRUE,
+    emmTables = FALSE,
+    emmWeights = TRUE
+  )
+```
+
+## 5.1.Binomial logistic regression
+```{r}
+stress %>% 
+	logRegBin(
+  dep = stress,
+  covs = vars(stability, flexibility, tasks, lack_train, lack_car_dev),
+  factors = NULL,
+  blocks = list(list("stability", "flexibility", "tasks", "lack_train", "lack_car_dev")),
+  refLevels = list(list(var = "stress", ref = "Unstressed")),
+  modelTest = TRUE,
+  dev = TRUE,
+  aic = TRUE,
+  bic = FALSE,
+  pseudoR2 = list("r2mf"),
+  omni = FALSE,
+  ci = FALSE,
+  ciWidth = 95,
+  OR = FALSE,
+  ciOR = FALSE,
+  ciWidthOR = 95,
+  emMeans = list(list()),
+  ciEmm = FALSE,
+  ciWidthEmm = 95,
+  emmPlots = FALSE,
+  emmTables = FALSE,
+  emmWeights = FALSE,
+  class = TRUE,
+  acc = TRUE,
+  spec = TRUE,
+  sens = TRUE,
+  auc = TRUE,
+  rocPlot = TRUE,
+  cutOff = 0.5,
+  cutOffPlot = FALSE,
+  collin = TRUE,
+  boxTidwell = FALSE,
+  cooks = FALSE
+)
+```
+
+# 6.Visualizations
+## 6.1.Maps
+```{r}
+eurasia <- 
+	ne_countries(
+  scale = 50,
+  type = "sovereignty",
+  continent = c("Europe", "Asia"),
+  country = NULL,
+  geounit = NULL,
+  sovereignty = NULL,
+  returnclass = c("sf")) %>%
+  select(name, iso_a2, continent, subregion, geometry) %>%
+  mutate(
+    name = fct_recode(name,
+      "Czechia" = "Czech Rep.",
+      "North Macedonia" = "Macedonia",
+      "Bosnia and Herzegovina" = "Bosnia and Herz."))
+ilc_di12 <- get_eurostat("ilc_di12", type = "label", time_format = "date") %>%
+  mutate_if(is_character, as_factor) %>%
+  mutate(geo = fct_recode(
+    geo,
+    "Germany" = "Germany (until 1990 former territory of the FRG)",
+    "Turkey" = "Türkiye"))
+eu <- ilc_di12 %>%
+  filter(time == "2007-01-01") %>%
+  group_by(geo) %>%
+  summarise(sm = sum(values)) %>%
+  mutate_if(is.numeric, round, 1)
+df <- eurasia %>%
+  inner_join(eu, by = c("name" = "geo"))
+df %>%
+  ggplot() +
+  geom_sf(aes(fill = sm), alpha = 0.4) +
+  coord_sf(xlim = c(-15, 40), ylim = c(34, 73), expand = FALSE) +
+  geom_sf_text(aes(label = sm), size = 3) +
+  scale_fill_distiller(palette = "Spectral") +
+  labs(
+    x = NULL, y = NULL, fill = "Години:",
+    title = "Gini, 2021 (0 = max equality, 100 = max inequality)"
+  ) +
+  theme(text = element_text(size = 16), legend.position = "none")
+```
+
+## 6.2.Interactive maps
+```{r}
+st_karadjovo <- read_csv("~/Desktop/R/data/st_karadjovo.csv")
+pal <- colorNumeric("magma", domain = st_karadjovo$alt)
+leaflet() %>%
+	addTiles() %>%
+	addCircles(data = st_karadjovo, color = ~ pal(alt), weight = 4)
+```
+
+## 6.3.Cluster analyses
+### 6.3.1.K-means clustering
+```{r}
+df <- load("~/Desktop/R/clustering/clustering.RData")
+```
+
+```{r}
+df <- scale(env_clust)
+res.dist <- get_dist(df, method = "euclidean", stand = FALSE)
+km.res <- fviz_nbclust(
+  df,
+  FUNcluster = kmeans,
+  method = "wss",
+  diss = NULL,
+  k.max = 10,
+  nboot = 100,
+  verbose = TRUE,
+  barfill = "steelblue",
+  barcolor = "steelblue",
+  linecolor = "steelblue",
+  print.summary = TRUE,
+)
+km.res <- kmeans(df, 6, nstart = 50)
+fviz_cluster(
+  km.res,
+  data = df,
+  stand = TRUE,
+  axes = 1:2,
+  geom = c("point"),
+  repel = TRUE,
+  show.clust.cent = TRUE,
+  ellipse = TRUE,
+  ellipse.type = "convex",
+  ellipse.level = 0.95,
+  ellipse.alpha = 0.1,
+  shape = NULL,
+  pointsize = 1.5,
+  labelsize = 16,
+  main = "K-means clustering",
+  xlab = NULL,
+  ylab = NULL,
+  outlier.color = "black",
+  outlier.shape = 19,
+  outlier.pointsize = pointsize,
+  outlier.labelsize = labelsize,
+  ggtheme = theme_minimal())
+```
+
+### 6.3.2.Hierarchical clustering
+```{r}
+res.hc <- hclust(d = res.dist, method = "ward.D2")
+fviz_dend(
+  x = res.hc,
+  k = 6,
+  h = NULL,
+  k_colors = "simpsons",
+  palette = "simpsons",
+  show_labels = TRUE,
+  color_labels_by_k = TRUE,
+  label_cols = NULL,
+  labels_track_height = 1.0,
+  repel = FALSE,
+  lwd = 0.8,
+  type = "rectangle",
+  phylo_layout = "layout.auto",
+  rect = TRUE,
+  rect_border = "gray",
+  rect_lty = 2,
+  rect_fill = FALSE,
+  lower_rect = 0,
+  horiz = FALSE,
+  cex = 0.7,
+  main = "Ward D2 clustering dendrogram",
+  xlab = "",
+  ylab = "Height",
+  sub = NULL,
+  ggtheme = theme_classic())
+```
+
+## 6.4.Ordination
+### 6.4.1.Principal Component Analysis (PCA)
+```{r}
+diss <- read_csv("~/Desktop/R/data/diss.csv")
+data <- diss %>% column_to_rownames(var = "plot") %>% 
+  select(elev:annuals)
+com_types <- diss %>% as_tibble() %>%
+  select(plot, com) %>%
+  column_to_rownames(var = "plot")
+```
+
+```{r}
+res.pca<-PCA(data, scale.unit = TRUE, ncp = 5, ind.sup = NULL,
+             quanti.sup = NULL, quali.sup = NULL, row.w = NULL,
+             col.w = NULL, graph = F, axes = c(1,2))
+```
+
+```{r}
+pca_biplot<-fviz_pca_biplot(
+  X = res.pca,
+  axes = 1:2,
+  geom.ind = c("point"),
+  geom.var = c("arrow", "text"),
+  select.var = list(contrib = 10),
+  col.ind = com_types$com,
+  fill.ind = com_types$com,
+  col.var = "black",
+  fill.var = "black",
+  gradient.cols = NULL,
+  label = "all",
+  invisible = "none",
+  repel = TRUE,
+  habillage = "none",
+  palette = "simpsons",
+  addEllipses = FALSE,
+  ellipse.type = "convex",
+  title = NULL,
+  pointshape = 21,
+  pointsize = 3,
+  labelsize = 5,
+  arrowsize = 0.7,
+  mean.point = FALSE,
+  legend.title = "Community types",
+  xlab = "PCA1 (37.8%)",
+  ylab = "PCA2 (17%)")
+```
+
+```{r}
+ggpar(
+  pca_biplot,
+  palette = "simpsons",
+  gradient.cols = NULL,
+  main = NULL,
+  submain = NULL,
+  caption = NULL,
+  xlab = "PCA1",
+  ylab = "PCA2",
+  title = NULL,
+  subtitle = NULL,
+  font.main = 16,
+  font.submain = NULL,
+  font.x = 16,
+  font.y = 16,
+  font.caption = NULL,
+  font.title = NULL,
+  font.subtitle = NULL,
+  font.family = "",
+  xlim = NULL,
+  ylim = NULL,
+  xscale = c("none", "log2", "log10", "sqrt"),
+  yscale = c("none", "log2", "log10", "sqrt"),
+  format.scale = FALSE,
+  legend = "right",
+  legend.title = "Vegetation\nTypes",
+  font.legend = 16,
+  ticks = TRUE,
+  tickslab = TRUE,
+  font.tickslab = 16,
+  font.xtickslab = 16,
+  font.ytickslab = 16,
+  x.text.angle = NULL,
+  y.text.angle = NULL,
+  xtickslab.rt = NULL,
+  ytickslab.rt = NULL,
+  xticks.by = NULL,
+  yticks.by = NULL,
+  rotate = FALSE,
+  orientation = c("vertical", "horizontal", "reverse"),
+  ggtheme = theme_classic())
+```
