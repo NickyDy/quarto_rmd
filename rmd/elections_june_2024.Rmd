@@ -1,7 +1,7 @@
 ---
-title: "Изборни секции (топ 10) със съмнение за купуване на гласове на изборите през юни, 2024 г."
+title: "Изборни секции (топ 10) със съмнение за купуване на гласове на изборите през октомври, 2024 г."
 author: "nickydyakov@gmail.com"
-date: "2024-06-19"
+date: "2025-03-03"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -18,7 +18,6 @@ knitr::opts_chunk$set(fig.width = 18, fig.asp = 0.618, out.width = "100%", echo 
 
 ```{r}
 library(tidyverse)
-library(arrow)
 library(scales)
 ```
 
@@ -38,7 +37,11 @@ colors <- c(
   "ГЕРБ" = "blue",
   "ОП (НФСБ, АТАКА и ВМРО)" = "brown",
   "ВОЛЯ" = "pink",
-  "ВЕЛИЧИЕ" = "darkgreen")
+  "ВЕЛИЧИЕ" = "darkgreen",
+  "ДПС-НH" = "purple",
+  "АПС" = "purple",
+  "МЕЧ" = "maroon",
+  "БСП-ОЛ" = "red")
 
 space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "", 
                      big.mark = " ", decimal.mark = ".", trim = TRUE, digits, 
@@ -55,20 +58,21 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 ```
 
 ```{r}
-votes <- read_parquet("~/Desktop/R/shiny/elections/votes.parquet")
+votes <- read_rds("~/Desktop/R/shiny/elections/votes.rds") %>% 
+  mutate(vote_date = fct_relevel(vote_date,
+                                 "Октомври_2024",
+                                 "Юни_2024",
+                                 "Април_2023",
+  															 "Октомври_2022", 
+  															 "Ноември_2021", 
+  															 "Юли_2021", 
+  															 "Април_2021", 
+  															 "Март_2017"))
 ```
 
 ```{r}
 votes %>%
   filter(code == "293400138") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -80,27 +84,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Хасково, с.Маслиново, секция: 293400138",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "111900022") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -112,27 +108,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Луковит, с.Дерманци, секция: 111900022",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "261800005") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -144,27 +132,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Етрополе, гр.Етрополе, секция: 261800005",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "104800072") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -176,27 +156,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Дупница, гр.Дупница, секция: 104800072",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "13700015") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -208,27 +180,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Разлог, гр.Разлог, секция: 13700015",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "113300007") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -240,27 +204,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Тетевен, с.Галата, секция: 113300007",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "14900006") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -272,27 +228,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Струмяни, с.Микрево, секция: 14900006",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "272200004") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -304,27 +252,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Мъглиж, гр.Мъглиж, секция: 272200004",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "263900036") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -336,27 +276,19 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Самоков, гр.Самоков, секция: 263900036",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
 ```{r}
 votes %>%
   filter(code == "263900032") %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021", 
-  															 "Март_2017")) %>%
   group_by(vote_date, oblast, obshtina, section, code, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   filter(sum_votes >= 1) %>%
@@ -368,13 +300,13 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.05, .8))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
-  					position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  theme(text = element_text(size = 16), 
+  					position = position_dodge(width = 1), hjust = -0.05, size = 12, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = "Община Самоков, гр.Самоков, секция: 263900032",
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 ```
 
